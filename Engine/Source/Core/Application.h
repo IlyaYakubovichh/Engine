@@ -6,10 +6,12 @@ namespace Engine {
 
     class ENGINE_API Application {
     public:
-        Application();
+        Application() = default;
         virtual ~Application() = default;
 
+        void Start();
         void Run();
+        void Shutdown();
     };
 
 }

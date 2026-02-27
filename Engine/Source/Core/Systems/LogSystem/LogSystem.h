@@ -5,8 +5,8 @@
 #ifndef ENGINE_LOGGER_H
 #define ENGINE_LOGGER_H
 
-#include "../../Macro.h"
-#include "../../Utility.h"
+#include "Singleton.h"
+#include "Macro.h"
 #include <memory>
 #include <concepts>
 #include <string>
@@ -34,13 +34,9 @@ namespace Engine {
     };
 
     // Log system
-    class ENGINE_API LogSystem : public NonCopyable {
+    class ENGINE_API LogSystem : public Singleton<LogSystem> {
+        friend class Singleton;
     public:
-        static LogSystem& GetInstance() {
-            static LogSystem instance;
-            return instance;
-        }
-
         // Interface for log
         void LogMessage(std::string_view categoryName, LogSeverityLevel severity, std::string_view message) const;
 
@@ -65,12 +61,13 @@ namespace Engine {
 
 // Macro definitions
 
+// LogSystem should be started in order to use ENGINE_LOG
 #define ENGINE_LOG(categoryName, severity, ...)                                                                                                         \
 do {                                                                                                                                                    \
     if constexpr(Engine::LogSeverityLevel::severity >= Engine::minSeverityBound && Engine::LogSeverityLevel::severity <= Engine::maxSeverityBound) {    \
         static_assert(Engine::Loggable<decltype(categoryName)>, "Unable to log category because of unconvertible type!");                               \
         static_assert(Engine::Loggable<decltype(__VA_ARGS__)>, "Unable to log message because of unconvertible type!");                                 \
-        Engine::LogSystem::GetInstance().LogMessage(categoryName, Engine::LogSeverityLevel::severity, __VA_ARGS__);                                     \
+        Engine::LogSystem::GetInstance()->LogMessage(categoryName, Engine::LogSeverityLevel::severity, __VA_ARGS__);                                    \
     }                                                                                                                                                   \
 } while (0)
 

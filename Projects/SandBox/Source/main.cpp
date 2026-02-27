@@ -1,20 +1,18 @@
 #include <Engine.h>
 
-class Application : public Engine::Application {
+class Application final : public Engine::Application {
 public:
-    Application() {
-
-    }
-
-    ~Application() {
-
-    }
-
+    Application() = default;
+    ~Application() override = default;
 };
 
 int main() {
-    Application* application = new Application();
+    auto* application = new Application();
+
+    application->Start();
     application->Run();
+    application->Shutdown();
+
     delete application;
 
     return 0;

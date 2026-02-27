@@ -6,18 +6,10 @@ namespace Engine {
 
     class ENGINE_API Application {
     public:
-        Application() = default;
+        Application();
         virtual ~Application() = default;
 
-        static Application* GetInstance() {
-            static Application instance;
-            return &instance;
-        }
-
         void Run();
-
-    private:
-        static Application* sInstance;
     };
 
 }

@@ -13,7 +13,8 @@ add_library(Engine SHARED ${Sources})
 if(WIN32)
     set_target_properties(Engine PROPERTIES PREFIX "" OUTPUT_NAME "Engine")     # remove lib Prefix
 endif()
-target_compile_definitions(Engine PRIVATE ENGINE_EXPORTS)                       # macro definition
+target_compile_definitions(Engine PRIVATE $<$<CONFIG:Debug>:ENGINE_DEBUG>)      # macro for debug build
+target_compile_definitions(Engine PRIVATE ENGINE_EXPORTS)                       # macro for __declspec
 target_include_directories(Engine PUBLIC                                        # include directories
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/Source

@@ -14,6 +14,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(
         spdlog
 )
-
-# link dependencies to Engine
 target_link_libraries(Engine PUBLIC spdlog)

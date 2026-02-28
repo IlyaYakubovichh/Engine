@@ -5,7 +5,14 @@
 #ifndef ENGINE_ENGINE_H
 #define ENGINE_ENGINE_H
 
+// Core
 #include "Macro.h"
+#include "Layer.h"
 #include "Application.h"
+
+// Systems
+#include "Systems/LayerSystem/LayerSystem.h"
+#include "Systems/LogSystem/LogSystem.h"
+#include "Systems/WindowSystem/WindowSystem.h"
 
 #endif //ENGINE_ENGINE_H

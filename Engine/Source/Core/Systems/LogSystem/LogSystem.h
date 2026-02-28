@@ -5,8 +5,8 @@
 #ifndef ENGINE_LOGGER_H
 #define ENGINE_LOGGER_H
 
-#include "Singleton.h"
 #include "Macro.h"
+#include "Singleton.h"
 #include <memory>
 #include <concepts>
 #include <string>
@@ -34,7 +34,7 @@ namespace Engine {
     };
 
     // Log system
-    class ENGINE_API LogSystem : public Singleton<LogSystem> {
+    class ENGINE_API LogSystem final : public Singleton<LogSystem> {
         friend class Singleton;
     public:
         // Interface for log
@@ -42,7 +42,7 @@ namespace Engine {
 
     private:
         LogSystem();
-        ~LogSystem();
+        ~LogSystem() override;
 
         // PIMPL idiom
         class Impl;
@@ -54,20 +54,21 @@ namespace Engine {
     concept Loggable = std::convertible_to<T, std::string> || std::convertible_to<T, std::string_view>;
 
     // bounds
-    constexpr LogSeverityLevel minSeverityBound = LogSeverityLevel::Trace;
-    constexpr LogSeverityLevel maxSeverityBound = LogSeverityLevel::Fatal;
+    constexpr auto minSeverityBound = LogSeverityLevel::Trace;
+    constexpr auto maxSeverityBound = LogSeverityLevel::Fatal;
 
 }
 
 // Macro definitions
 
-// LogSystem should be started in order to use ENGINE_LOG
+// LogSystem should be started in order to use Engine logs
 #define ENGINE_LOG(categoryName, severity, ...)                                                                                                         \
 do {                                                                                                                                                    \
     if constexpr(Engine::LogSeverityLevel::severity >= Engine::minSeverityBound && Engine::LogSeverityLevel::severity <= Engine::maxSeverityBound) {    \
         static_assert(Engine::Loggable<decltype(categoryName)>, "Unable to log category because of unconvertible type!");                               \
         static_assert(Engine::Loggable<decltype(__VA_ARGS__)>, "Unable to log message because of unconvertible type!");                                 \
-        Engine::LogSystem::GetInstance()->LogMessage(categoryName, Engine::LogSeverityLevel::severity, __VA_ARGS__);                                    \
+        std::string formattedStr = std::format(#__VA_ARGS__);                                                                                           \
+        Engine::LogSystem::GetInstance()->LogMessage(categoryName, Engine::LogSeverityLevel::severity, formattedStr);                                   \
     }                                                                                                                                                   \
 } while (0)
 

@@ -1,15 +1,14 @@
-#include <Engine.h>
-
-class Application final : public Engine::Application {
-public:
-    Application() = default;
-    ~Application() override = default;
-};
+#include "SandBoxApplication.h"
+#include "SandBoxGraphicsLayer.h"
 
 int main() {
-    auto* application = new Application();
+    SandBoxApplication* application = new SandBoxApplication();
 
     application->Start();
+
+    // Layers
+    application->PushLayer(new SandBoxGraphicsLayer());
+
     application->Run();
     application->Shutdown();
 

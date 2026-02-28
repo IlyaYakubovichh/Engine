@@ -11,7 +11,7 @@ namespace Engine {
     class NonCopyable {
         public:
         NonCopyable() = default;
-        ~NonCopyable() = default;
+        virtual ~NonCopyable() = default;
 
         // Delete copy operations
         NonCopyable(const NonCopyable&) = delete;

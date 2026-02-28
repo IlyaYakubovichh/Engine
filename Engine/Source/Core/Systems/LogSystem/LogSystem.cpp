@@ -3,9 +3,6 @@
 //
 
 #include "LogSystem.h"
-#include <iostream>
-
-// Spdlog includes
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -15,7 +12,7 @@ namespace Engine {
     namespace {
         constexpr const char* clogPattern = "[%H:%M:%S.%e] [%^%l%$] %v";
 
-        spdlog::level::level_enum ConvertSeverityToSpdlog(LogSeverityLevel severity) {
+        spdlog::level::level_enum ConvertSeverityToSpdlog(const LogSeverityLevel severity) {
             switch (severity) {
                 case LogSeverityLevel::Trace:   return spdlog::level::trace;
                 case LogSeverityLevel::Debug:   return spdlog::level::debug;
@@ -36,7 +33,7 @@ namespace Engine {
             auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
             consoleSink->set_pattern(clogPattern);
 
-            // Create Engine logger
+            // Create Console logger
             mConsoleLogger = std::make_shared<spdlog::logger>("Engine logger", consoleSink);
             mConsoleLogger->set_pattern(clogPattern);
             mConsoleLogger->set_level(spdlog::level::trace);
@@ -46,21 +43,21 @@ namespace Engine {
             if (mConsoleLogger) {
                 mConsoleLogger->flush();
             }
-            // Smart pointers handle deletion automatically
+            mConsoleLogger.reset();
         }
 
         // Logger
-        void LogMessage(std::string_view categoryName, LogSeverityLevel severity, std::string_view message) const {
+        void LogMessage(const std::string_view categoryName, const LogSeverityLevel severity, const std::string_view message) const {
             if (!mConsoleLogger) return;
 
-            spdlog::level::level_enum level = ConvertSeverityToSpdlog(severity);
+            const spdlog::level::level_enum level = ConvertSeverityToSpdlog(severity);
 
             // Format: [Category] Message
             // Using standard string concatenation
-            std::string formattedMessage = std::string("[")
-                                           .append(categoryName)
-                                           .append("] ")
-                                           .append(message);
+            const std::string formattedMessage = std::string("[")
+                                                .append(categoryName)
+                                                .append("] ")
+                                                .append(message);
 
             mConsoleLogger->log(level, formattedMessage);
 
@@ -72,7 +69,7 @@ namespace Engine {
     };
 
     // Interface for PIMPL
-    void LogSystem::LogMessage(std::string_view categoryName, LogSeverityLevel severity, std::string_view message) const {
+    void LogSystem::LogMessage(const std::string_view categoryName, const LogSeverityLevel severity, const std::string_view message) const {
         if (pImpl) {
             pImpl->LogMessage(categoryName, severity, message);
         }

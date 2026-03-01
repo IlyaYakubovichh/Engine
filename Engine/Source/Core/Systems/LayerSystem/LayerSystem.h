@@ -15,9 +15,6 @@ namespace Engine {
     class ENGINE_API LayerSystem final : public Singleton<LayerSystem> {
         friend class Singleton;
     public:
-        LayerSystem() = default;
-        ~LayerSystem() override;
-
         // Interface for add-remove
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* overlay);
@@ -29,6 +26,9 @@ namespace Engine {
         [[nodiscard]] const std::vector<Layer*>& GetLayers() const;
 
     private:
+        LayerSystem() = default;
+        ~LayerSystem() override;
+
         std::vector<Layer*> mLayers;
         std::uint32_t mLayerInsertIndex{ 0 };
     };

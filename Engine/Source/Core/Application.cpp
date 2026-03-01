@@ -1,25 +1,38 @@
 #include "Application.h"
 #include "Systems/LogSystem/LogSystem.h"
 #include "Systems/LayerSystem/LayerSystem.h"
+#include "Systems/WindowSystem/WindowSystem.h"
 
 namespace Engine {
 
     void Application::Start() {
-        LogSystem::Start();     ENGINE_LOG_INFO("Engine", "LogSystem ON!");
-        LayerSystem::Start();   ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
+        LogSystem::Start();         ENGINE_LOG_INFO("Engine", "LogSystem ON!");
+        LayerSystem::Start();       ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
+        WindowSystem::Start();      ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
+
+        WindowSystem::GetInstance()->CreateWindow(WindowSettings{});
+        WindowSystem::GetInstance()->CreateWindow(WindowSettings{});
     }
 
     void Application::Run() {
-        while (true) {
-            for (auto layers = LayerSystem::GetInstance()->GetLayers(); const auto layer : layers) {
-                layer->OnUpdate();
+        const auto& windowSystem = WindowSystem::GetInstance();
+        const auto& layerSystem = LayerSystem::GetInstance();
+
+        while (!windowSystem->AreAllWindowsClosed()) {
+            windowSystem->OnUpdate();
+
+            for (const auto& layer : layerSystem->GetLayers()) {
+                if (layer) {
+                    layer->OnUpdate();
+                }
             }
         }
     }
 
     void Application::Shutdown() {
-        ENGINE_LOG_INFO("Engine", "LayerSystem OFF!");  LayerSystem::Shutdown();
-        ENGINE_LOG_INFO("Engine", "LogSystem OFF!");    LogSystem::Shutdown();
+        ENGINE_LOG_INFO("Engine", "WindowSystem OFF!");  WindowSystem::Shutdown();
+        ENGINE_LOG_INFO("Engine", "LayerSystem OFF!");   LayerSystem::Shutdown();
+        ENGINE_LOG_INFO("Engine", "LogSystem OFF!");     LogSystem::Shutdown();
     }
 
     void Application::PushLayer(Layer* layer) {

@@ -49,10 +49,6 @@ namespace Engine {
         std::unique_ptr<Impl> pImpl;
     };
 
-    // concepts
-    template<typename T>
-    concept Loggable = std::convertible_to<T, std::string> || std::convertible_to<T, std::string_view>;
-
     // bounds
     constexpr auto minSeverityBound = LogSeverityLevel::Trace;
     constexpr auto maxSeverityBound = LogSeverityLevel::Fatal;
@@ -65,9 +61,7 @@ namespace Engine {
 #define ENGINE_LOG(categoryName, severity, ...)                                                                                                         \
 do {                                                                                                                                                    \
     if constexpr(Engine::LogSeverityLevel::severity >= Engine::minSeverityBound && Engine::LogSeverityLevel::severity <= Engine::maxSeverityBound) {    \
-        static_assert(Engine::Loggable<decltype(categoryName)>, "Unable to log category because of unconvertible type!");                               \
-        static_assert(Engine::Loggable<decltype(__VA_ARGS__)>, "Unable to log message because of unconvertible type!");                                 \
-        std::string formattedStr = std::format(#__VA_ARGS__);                                                                                           \
+        std::string formattedStr = std::format(__VA_ARGS__);                                                                                           \
         Engine::LogSystem::GetInstance()->LogMessage(categoryName, Engine::LogSeverityLevel::severity, formattedStr);                                   \
     }                                                                                                                                                   \
 } while (0)

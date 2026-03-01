@@ -2,11 +2,10 @@
 #include "SandBoxGraphicsLayer.h"
 
 int main() {
-    SandBoxApplication* application = new SandBoxApplication();
+    const auto application = new SandBoxApplication();
 
     application->Start();
 
-    // Layers
     application->PushLayer(new SandBoxGraphicsLayer());
 
     application->Run();

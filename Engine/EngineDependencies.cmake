@@ -15,3 +15,13 @@ FetchContent_MakeAvailable(
         spdlog
 )
 target_link_libraries(Engine PUBLIC spdlog)
+
+# glfw (API for platform independent window creation)
+FetchContent_Declare(
+        glfw
+        URL https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz
+)
+FetchContent_MakeAvailable(
+        glfw
+)
+target_link_libraries(Engine PUBLIC glfw)

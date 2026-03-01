@@ -2,6 +2,7 @@
 #include "Systems/LogSystem/LogSystem.h"
 #include "Systems/LayerSystem/LayerSystem.h"
 #include "Systems/WindowSystem/WindowSystem.h"
+#include "Systems/VulkanSystem/VulkanSystem.h"
 
 namespace Engine {
 
@@ -9,8 +10,8 @@ namespace Engine {
         LogSystem::Start();         ENGINE_LOG_INFO("Engine", "LogSystem ON!");
         LayerSystem::Start();       ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
         WindowSystem::Start();      ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
+        VulkanSystem::Start();      ENGINE_LOG_INFO("Engine", "VulkanSystem ON!");
 
-        WindowSystem::GetInstance()->CreateWindow(WindowSettings{});
         WindowSystem::GetInstance()->CreateWindow(WindowSettings{});
     }
 
@@ -19,17 +20,18 @@ namespace Engine {
         const auto& layerSystem = LayerSystem::GetInstance();
 
         while (!windowSystem->AreAllWindowsClosed()) {
-            windowSystem->OnUpdate();
-
             for (const auto& layer : layerSystem->GetLayers()) {
                 if (layer) {
-                    layer->OnUpdate();
+                    // layer->OnUpdate();
                 }
             }
+
+            windowSystem->OnUpdate();
         }
     }
 
     void Application::Shutdown() {
+        ENGINE_LOG_INFO("Engine", "VulkanSystem OFF!");  VulkanSystem::Shutdown();
         ENGINE_LOG_INFO("Engine", "WindowSystem OFF!");  WindowSystem::Shutdown();
         ENGINE_LOG_INFO("Engine", "LayerSystem OFF!");   LayerSystem::Shutdown();
         ENGINE_LOG_INFO("Engine", "LogSystem OFF!");     LogSystem::Shutdown();

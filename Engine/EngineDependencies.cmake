@@ -25,3 +25,23 @@ FetchContent_MakeAvailable(
         glfw
 )
 target_link_libraries(Engine PUBLIC glfw)
+
+# Vulkan
+find_package(Vulkan COMPONENTS shaderc_combined)
+if(Vulkan_FOUND)
+    target_link_libraries(Engine PUBLIC
+            Vulkan::Vulkan
+            Vulkan::shaderc_combined
+    )
+endif()
+
+# vkbootstrap (utility that simplifies vulkan initialization)
+FetchContent_Declare(
+        vkbootstrap
+        GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap
+        GIT_TAG main
+)
+FetchContent_MakeAvailable(
+        vkbootstrap
+)
+target_link_libraries(Engine PUBLIC vk-bootstrap::vk-bootstrap)

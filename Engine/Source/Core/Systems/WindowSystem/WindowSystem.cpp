@@ -4,10 +4,13 @@
 
 #include "WindowSystem/WindowSystem.h"
 #include "LogSystem/LogSystem.h"
-#include <ranges>
 #include <GLFW/glfw3.h>
 
 namespace Engine {
+
+    static void GLFWErrorCallback(int error, const char* description) {
+        ENGINE_LOG_ERROR("GLFW", "GLFW error: {}, description: {}", error, description);
+    }
 
     std::pair<uint32_t, std::shared_ptr<Window>> WindowSystem::CreateWindow(const WindowSettings& settings) {
         if (settings.width == 0 || settings.height == 0) {
@@ -80,6 +83,7 @@ namespace Engine {
             return;
         }
 
+        glfwSetErrorCallback(GLFWErrorCallback);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // not using OpenGL API
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // TODO: make resizable
 

@@ -5,7 +5,7 @@
 #ifndef ENGINE_VULKANUTILS_H
 #define ENGINE_VULKANUTILS_H
 
-#include #include <vulkan/vulkan.h>
+#include <vulkan/vulkan.h>
 #include <vulkan/vk_enum_string_helper.h>
 
 #define VULKAN_CHECK(res)                                                                       \

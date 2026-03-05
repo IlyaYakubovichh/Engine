@@ -9,10 +9,11 @@ namespace Engine {
     void Application::Start() {
         LogSystem::Start();         ENGINE_LOG_INFO("Engine", "LogSystem ON!");
         LayerSystem::Start();       ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
-        WindowSystem::Start();      ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
-        VulkanSystem::Start();      ENGINE_LOG_INFO("Engine", "VulkanSystem ON!");
 
+        WindowSystem::Start();      ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
         WindowSystem::GetInstance()->CreateWindow(WindowSettings{});
+
+        VulkanSystem::Start();      ENGINE_LOG_INFO("Engine", "VulkanSystem ON!");
     }
 
     void Application::Run() {

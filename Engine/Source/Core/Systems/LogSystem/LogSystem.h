@@ -8,13 +8,17 @@
 #include "Macro.h"
 #include "Singleton.h"
 #include <memory>
-#include <concepts>
-#include <string>
 #include <string_view>
 
 // Settings
 #define ENGINE_LOG_TRACE_STATUS 1
-#define ENGINE_LOG_DEBUG_STATUS 1
+
+#ifdef ENGINE_DEBUG
+    #define ENGINE_LOG_DEBUG_STATUS 1
+#else
+    #define ENGINE_LOG_DEBUG_STATUS 0
+#endif
+
 #define ENGINE_LOG_INFO_STATUS  1
 #define ENGINE_LOG_WARN_STATUS  1
 #define ENGINE_LOG_ERROR_STATUS 1
@@ -61,7 +65,7 @@ namespace Engine {
 #define ENGINE_LOG(categoryName, severity, ...)                                                                                                         \
 do {                                                                                                                                                    \
     if constexpr(Engine::LogSeverityLevel::severity >= Engine::minSeverityBound && Engine::LogSeverityLevel::severity <= Engine::maxSeverityBound) {    \
-        std::string formattedStr = std::format(__VA_ARGS__);                                                                                           \
+        std::string formattedStr = std::format(__VA_ARGS__);                                                                                            \
         Engine::LogSystem::GetInstance()->LogMessage(categoryName, Engine::LogSeverityLevel::severity, formattedStr);                                   \
     }                                                                                                                                                   \
 } while (0)

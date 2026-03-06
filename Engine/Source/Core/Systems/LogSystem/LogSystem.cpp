@@ -10,7 +10,7 @@ namespace Engine {
 
     // Anonymous namespace - internal linkage
     namespace {
-        constexpr const char* clogPattern = "[%H:%M:%S.%e] [%^%l%$] %v";
+        constexpr auto clogPattern = "[%H:%M:%S.%e] [%^%l%$] %v";
 
         spdlog::level::level_enum ConvertSeverityToSpdlog(const LogSeverityLevel severity) {
             switch (severity) {

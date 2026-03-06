@@ -2,9 +2,8 @@
 #include "WindowSystem/WindowSystem.h"
 #include "LogSystem/LogSystem.h"
 #include "VulkanUtility.h"
-
-#include <GLFW/glfw3.h>
 #include <VkBootstrap.h>
+#include <GLFW/glfw3.h>
 
 namespace Engine {
 
@@ -13,35 +12,109 @@ namespace Engine {
 // ---------------------------------------------------------------------------
     class VulkanSystem::Impl {
     public:
-        Impl()  {
+        Impl() {
             InitInstance();
-            InitSurface();
+            InitMainSurface();
             InitDevice();
         }
 
         ~Impl() {
+            // Vulkan window context
+            std::vector<uint32_t> ids;
+            ids.reserve(mWindowContexts.size());
+            for (const auto& id : mWindowContexts | std::views::keys) ids.push_back(id);
+            for (const auto id : ids) DestroyWindowContext(id);
+
+            // Device
             vkDestroyDevice(mDevice, nullptr);
-            ENGINE_LOG_INFO("VulkanSystem", "Logical device destroyed");
+            ENGINE_LOG_DEBUG("VulkanSystem", "Logical device destroyed");
 
-            vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
-            ENGINE_LOG_INFO("VulkanSystem", "Surface destroyed");
-
+            // Debug messenger
 #ifdef ENGINE_DEBUG
             vkb::destroy_debug_utils_messenger(mInstance, mDebugMessenger);
-            ENGINE_LOG_INFO("VulkanSystem", "Debug messenger destroyed");
+            ENGINE_LOG_DEBUG("VulkanSystem", "Debug messenger destroyed");
 #endif
 
+            // Instance
             vkDestroyInstance(mInstance, nullptr);
-            ENGINE_LOG_INFO("VulkanSystem", "Instance destroyed");
+            ENGINE_LOG_DEBUG("VulkanSystem", "Instance destroyed");
+        }
+
+        // -----------------------------------------------------------------------
+        // Per-window context
+        // -----------------------------------------------------------------------
+        void CreateWindowContext(const uint32_t windowId, const std::shared_ptr<Window>& window) {
+            VulkanWindowContext* currentContext = nullptr;
+            auto it = mWindowContexts.find(windowId);
+
+            if (it != mWindowContexts.end()) {
+                currentContext = &it->second;
+            } else {
+                VulkanWindowContext newContext;
+                VULKAN_CHECK(glfwCreateWindowSurface(mInstance, window->GetRawGLFW(), nullptr, &newContext.surface));
+                ENGINE_LOG_DEBUG("VulkanSystem", "Surface created for window {}", windowId);
+                auto [inserted_it, ok] = mWindowContexts.emplace(windowId, std::move(newContext));
+                currentContext = &inserted_it->second;
+            }
+
+            auto [width, height]        = window->GetExtent();
+            currentContext->imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+            currentContext->extent      = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+
+            vkb::SwapchainBuilder builder{ mPhysicalDevice, mDevice, currentContext->surface };
+            auto result = builder
+                .set_desired_format({ currentContext->imageFormat, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR })
+                .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                .set_desired_extent(currentContext->extent.width, currentContext->extent.height)
+                .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+                .build();
+
+            if (!result) {
+                ENGINE_LOG_ERROR("VulkanSystem", "Failed to build swapchain for window {}: {}", windowId, result.error().message());
+                return;
+            }
+
+            vkb::Swapchain vkbSwapchain = result.value();
+            currentContext->swapchain   = vkbSwapchain.swapchain;
+            currentContext->images      = vkbSwapchain.get_images().value();
+            currentContext->imageViews  = vkbSwapchain.get_image_views().value();
+
+            ENGINE_LOG_DEBUG("VulkanSystem", "Swapchain created for window {} ({}x{})", windowId, currentContext->extent.width, currentContext->extent.height);
+        }
+
+        void DestroyWindowContext(const uint32_t windowId) {
+            const auto it = mWindowContexts.find(windowId);
+            if (it == mWindowContexts.end()) {
+                ENGINE_LOG_WARN("VulkanSystem", "No context found for window {}", windowId);
+                return;
+            }
+
+            const auto& ctx = it->second;
+
+            for (const auto& view : ctx.imageViews)
+                vkDestroyImageView(mDevice, view, nullptr);
+
+            vkDestroySwapchainKHR(mDevice, ctx.swapchain, nullptr);
+            vkDestroySurfaceKHR(mInstance, ctx.surface, nullptr);
+
+            ENGINE_LOG_DEBUG("VulkanSystem", "VulkanWindowContext destroyed for window {}", windowId);
+            mWindowContexts.erase(it);
+        }
+
+        [[nodiscard]] const VulkanWindowContext& GetWindowContext(const uint32_t windowId) const {
+            const auto it = mWindowContexts.find(windowId);
+            ENGINE_ASSERT_MESSAGE(it != mWindowContexts.end(), "No VulkanWindowContext for window with given id");
+            return it->second;
         }
 
         // Getters
-        [[nodiscard]] VkInstance       GetInstance()           const { return mInstance;           }
-        [[nodiscard]] VkPhysicalDevice GetPhysicalDevice()     const { return mPhysicalDevice;     }
-        [[nodiscard]] VkDevice         GetDevice()             const { return mDevice;              }
-        [[nodiscard]] VkSurfaceKHR     GetSurface()            const { return mSurface;             }
-        [[nodiscard]] VkQueue          GetGraphicsQueue()      const { return mGraphicsQueue;       }
-        [[nodiscard]] uint32_t         GetGraphicsQueueIndex() const { return mGraphicsQueueIndex;  }
+        [[nodiscard]] VkInstance       GetInstance()               const { return mInstance;               }
+        [[nodiscard]] VkPhysicalDevice GetPhysicalDevice()         const { return mPhysicalDevice;         }
+        [[nodiscard]] VkDevice         GetDevice()                 const { return mDevice;                 }
+        [[nodiscard]] VkQueue          GetGraphicsQueue()          const { return mGraphicsQueue;          }
+        [[nodiscard]] uint32_t         GetGraphicsQueueIndex()     const { return mGraphicsQueueIndex;     }
+        [[nodiscard]] VkQueue          GetPresentationQueue()      const { return mPresentationQueue;      }
+        [[nodiscard]] uint32_t         GetPresentationQueueIndex() const { return mPresentationQueueIndex; }
 
 #ifdef ENGINE_DEBUG
         [[nodiscard]] VkDebugUtilsMessengerEXT GetDebugMessenger() const { return mDebugMessenger; }
@@ -53,9 +126,9 @@ namespace Engine {
 // ---------------------------------------------------------------------------
 #ifdef ENGINE_DEBUG
         static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
-            VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+            const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
             VkDebugUtilsMessageTypeFlagsEXT             /*messageType*/,
-            const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+            const VkDebugUtilsMessengerCallbackDataEXT*  pCallbackData,
             void*                                       /*pUserData*/)
         {
             switch (messageSeverity) {
@@ -100,14 +173,17 @@ namespace Engine {
 #ifdef ENGINE_DEBUG
             mDebugMessenger = result->debug_messenger;
 #endif
-            ENGINE_LOG_INFO("VulkanSystem", "Instance created successfully");
+            ENGINE_LOG_DEBUG("VulkanSystem", "Instance created successfully");
         }
 
-        void InitSurface() {
-            // VkBoostrap handles WSI under the hood
+        void InitMainSurface() {
             const auto window = WindowSystem::GetInstance()->GetWindowById(gMainWindowId);
-            VULKAN_CHECK(glfwCreateWindowSurface(mInstance, window->GetRawGLFW(), nullptr, &mSurface));
-            ENGINE_LOG_INFO("VulkanSystem", "Surface created successfully");
+
+            VulkanWindowContext ctx;
+            VULKAN_CHECK(glfwCreateWindowSurface(mInstance, window->GetRawGLFW(), nullptr, &ctx.surface));
+            ENGINE_LOG_DEBUG("VulkanSystem", "Surface created for main window ({})", gMainWindowId);
+
+            mWindowContexts.emplace(gMainWindowId, std::move(ctx));
         }
 
         void InitDevice() {
@@ -123,11 +199,13 @@ namespace Engine {
                 .bufferDeviceAddress = VK_TRUE,
             };
 
+            VkSurfaceKHR mainSurface = mWindowContexts.at(gMainWindowId).surface;
+
             auto physResult = vkb::PhysicalDeviceSelector{ mVkbInstance }
                 .set_minimum_version(1, 3)
                 .set_required_features_13(features13)
                 .set_required_features_12(features12)
-                .set_surface(mSurface)
+                .set_surface(mainSurface)
                 .select();
 
             if (!physResult) {
@@ -143,51 +221,46 @@ namespace Engine {
                 return;
             }
 
-            // Graphics queue
-            auto graphicsQueue      = devResult->get_queue(vkb::QueueType::graphics);
-            auto graphicsQueueIndex = devResult->get_queue_index(vkb::QueueType::graphics);
-            if (!graphicsQueue || !graphicsQueueIndex) {
-                ENGINE_LOG_ERROR("VulkanSystem", "Failed to get graphics queue");
-                return;
-            }
+            auto gq  = devResult->get_queue(vkb::QueueType::graphics);
+            auto gqi  = devResult->get_queue_index(vkb::QueueType::graphics);
+            auto pq  = devResult->get_queue(vkb::QueueType::present);
+            auto pqi  = devResult->get_queue_index(vkb::QueueType::present);
 
-            // Presentation queue
-            auto presentQueue      = devResult->get_queue(vkb::QueueType::present);
-            auto presentQueueIndex = devResult->get_queue_index(vkb::QueueType::present);
-            if (!presentQueue || !presentQueueIndex) {
-                ENGINE_LOG_ERROR("VulkanSystem", "Failed to get present queue");
+            if (!gq || !gqi || !pq || !pqi) {
+                ENGINE_LOG_ERROR("VulkanSystem", "Failed to get queues");
                 return;
             }
 
             mPhysicalDevice         = physResult->physical_device;
             mDevice                 = devResult->device;
-            mGraphicsQueue          = graphicsQueue.value();
-            mGraphicsQueueIndex     = graphicsQueueIndex.value();
-            mPresentationQueue      = presentQueue.value();
-            mPresentationQueueIndex = presentQueueIndex.value();
+            mGraphicsQueue          = gq.value();
+            mGraphicsQueueIndex     = gqi.value();
+            mPresentationQueue      = pq.value();
+            mPresentationQueueIndex = pqi.value();
 
-            ENGINE_LOG_INFO("VulkanSystem", "Logical device created successfully");
-            ENGINE_LOG_INFO("VulkanSystem", "Graphics queue index: {}", mGraphicsQueueIndex);
-            ENGINE_LOG_INFO("VulkanSystem", "Present queue index:  {}", mPresentationQueueIndex);
+            ENGINE_LOG_DEBUG("VulkanSystem", "Logical device created successfully");
+            ENGINE_LOG_DEBUG("VulkanSystem", "Graphics queue index: {}", mGraphicsQueueIndex);
+            ENGINE_LOG_DEBUG("VulkanSystem", "Present queue index:  {}", mPresentationQueueIndex);
         }
 
 // ---------------------------------------------------------------------------
 // Handles
 // ---------------------------------------------------------------------------
-        vkb::Instance mVkbInstance          {};
+        vkb::Instance mVkbInstance {};
 
-        VkInstance               mInstance           { VK_NULL_HANDLE };
-        VkSurfaceKHR             mSurface            { VK_NULL_HANDLE };
-        VkPhysicalDevice         mPhysicalDevice     { VK_NULL_HANDLE };
-        VkDevice                 mDevice             { VK_NULL_HANDLE };
-        VkQueue                  mGraphicsQueue      { VK_NULL_HANDLE };
-        VkQueue                  mPresentationQueue  { VK_NULL_HANDLE };
-        uint32_t                 mGraphicsQueueIndex     { 0 };
-        uint32_t                 mPresentationQueueIndex { 0 };
+        VkInstance       mInstance           { VK_NULL_HANDLE };
+        VkPhysicalDevice mPhysicalDevice     { VK_NULL_HANDLE };
+        VkDevice         mDevice             { VK_NULL_HANDLE };
+        VkQueue          mGraphicsQueue      { VK_NULL_HANDLE };
+        VkQueue          mPresentationQueue  { VK_NULL_HANDLE };
+        uint32_t         mGraphicsQueueIndex     { 0 };
+        uint32_t         mPresentationQueueIndex { 0 };
 
 #ifdef ENGINE_DEBUG
-        VkDebugUtilsMessengerEXT mDebugMessenger     { VK_NULL_HANDLE };
+        VkDebugUtilsMessengerEXT mDebugMessenger { VK_NULL_HANDLE };
 #endif
+
+        std::unordered_map<uint32_t, VulkanWindowContext> mWindowContexts;
     };
 
 // ---------------------------------------------------------------------------
@@ -198,12 +271,25 @@ namespace Engine {
 
     VulkanSystem::~VulkanSystem() = default;
 
-    VkInstance       VulkanSystem::GetInstance()           const { return pImpl->GetInstance();           }
-    VkPhysicalDevice VulkanSystem::GetPhysicalDevice()     const { return pImpl->GetPhysicalDevice();     }
-    VkDevice         VulkanSystem::GetDevice()             const { return pImpl->GetDevice();              }
-    VkSurfaceKHR     VulkanSystem::GetSurface()            const { return pImpl->GetSurface();             }
-    VkQueue          VulkanSystem::GetGraphicsQueue()      const { return pImpl->GetGraphicsQueue();       }
-    uint32_t         VulkanSystem::GetGraphicsQueueIndex() const { return pImpl->GetGraphicsQueueIndex();  }
+    void VulkanSystem::CreateVulkanWindowContext(const uint32_t windowId, const std::shared_ptr<Window>& window) const {
+        pImpl->CreateWindowContext(windowId, window);
+    }
+
+    void VulkanSystem::DestroyVulkanWindowContext(const uint32_t windowId) const {
+        pImpl->DestroyWindowContext(windowId);
+    }
+
+    const VulkanWindowContext& VulkanSystem::GetWindowContext(const uint32_t windowId) const {
+        return pImpl->GetWindowContext(windowId);
+    }
+
+    VkInstance       VulkanSystem::GetVkInstance()               const { return pImpl->GetInstance();               }
+    VkPhysicalDevice VulkanSystem::GetVkPhysicalDevice()         const { return pImpl->GetPhysicalDevice();         }
+    VkDevice         VulkanSystem::GetVkDevice()                 const { return pImpl->GetDevice();                 }
+    VkQueue          VulkanSystem::GetVkGraphicsQueue()          const { return pImpl->GetGraphicsQueue();          }
+    uint32_t         VulkanSystem::GetVkGraphicsQueueIndex()     const { return pImpl->GetGraphicsQueueIndex();     }
+    VkQueue          VulkanSystem::GetVkPresentationQueue()      const { return pImpl->GetPresentationQueue();      }
+    uint32_t         VulkanSystem::GetVkPresentationQueueIndex() const { return pImpl->GetPresentationQueueIndex(); }
 
 #ifdef ENGINE_DEBUG
     VkDebugUtilsMessengerEXT VulkanSystem::GetDebugMessenger() const { return pImpl->GetDebugMessenger(); }

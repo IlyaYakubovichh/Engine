@@ -16,7 +16,7 @@ namespace Engine {
                 delete layer;
             }
             mLayers.clear();
-            ENGINE_LOG_INFO("LayerSystem", "All layers destroyed");
+            ENGINE_LOG_DEBUG("LayerSystem", "All layers destroyed");
         }
 
         void PushLayer(Layer* layer) {
@@ -25,7 +25,7 @@ namespace Engine {
             mLayers.emplace(mLayers.begin() + mLayerInsertIndex, layer);
             mLayerInsertIndex++;
 
-            ENGINE_LOG_INFO("LayerSystem", "Layer '{}' pushed (index: {})", layer->GetName(), mLayerInsertIndex - 1);
+            ENGINE_LOG_DEBUG("LayerSystem", "Layer '{}' pushed (index: {})", layer->GetName(), mLayerInsertIndex - 1);
         }
 
         void PushOverlay(Layer* overlay) {
@@ -33,14 +33,14 @@ namespace Engine {
 
             mLayers.emplace_back(overlay);
 
-            ENGINE_LOG_INFO("LayerSystem", "Overlay '{}' pushed", overlay->GetName());
+            ENGINE_LOG_DEBUG("LayerSystem", "Overlay '{}' pushed", overlay->GetName());
         }
 
         void PopLayer(const Layer* layer) {
             ENGINE_ASSERT_MESSAGE(layer, "Attempted to PopLayer(nullptr)");
 
             if (const auto it = std::ranges::find(mLayers, layer); it != mLayers.end()) {
-                ENGINE_LOG_INFO("LayerSystem", "Layer '{}' popped", layer->GetName());
+                ENGINE_LOG_DEBUG("LayerSystem", "Layer '{}' popped", layer->GetName());
                 mLayers.erase(it);
                 mLayerInsertIndex--;
             } else {
@@ -52,7 +52,7 @@ namespace Engine {
             ENGINE_ASSERT_MESSAGE(overlay, "Attempted to PopOverlay(nullptr)");
 
             if (const auto it = std::ranges::find(mLayers, overlay); it != mLayers.end()) {
-                ENGINE_LOG_INFO("LayerSystem", "Overlay '{}' popped", overlay->GetName());
+                ENGINE_LOG_DEBUG("LayerSystem", "Overlay '{}' popped", overlay->GetName());
                 mLayers.erase(it);
             } else {
                 ENGINE_LOG_WARN("LayerSystem", "PopOverlay: overlay '{}' not found", overlay->GetName());
@@ -84,10 +84,10 @@ namespace Engine {
 
     LayerSystem::~LayerSystem() = default;
 
-    void LayerSystem::PushLayer(Layer* layer)          { pImpl->PushLayer(layer);       }
-    void LayerSystem::PushOverlay(Layer* overlay)      { pImpl->PushOverlay(overlay);   }
-    void LayerSystem::PopLayer(const Layer* layer)     { pImpl->PopLayer(layer);         }
-    void LayerSystem::PopOverlay(const Layer* overlay) { pImpl->PopOverlay(overlay);     }
+    void LayerSystem::PushLayer(Layer* layer)          const    { pImpl->PushLayer(layer);     }
+    void LayerSystem::PushOverlay(Layer* overlay)      const    { pImpl->PushOverlay(overlay); }
+    void LayerSystem::PopLayer(const Layer* layer)     const    { pImpl->PopLayer(layer);      }
+    void LayerSystem::PopOverlay(const Layer* overlay) const    { pImpl->PopOverlay(overlay);  }
 
     const Layer* LayerSystem::GetLayerByName(const std::string& name) const {
         return pImpl->GetLayerByName(name);

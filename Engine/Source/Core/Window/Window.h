@@ -5,12 +5,15 @@
 #ifndef ENGINE_WINDOW_H
 #define ENGINE_WINDOW_H
 
+#include "Macro.h"
 #include "Utility.h"
-#include <GLFW/glfw3.h>
+#include <utility>
+
+struct GLFWwindow;
 
 namespace Engine {
 
-    struct WindowSettings {
+    struct ENGINE_API WindowSettings {
         int xpos{ 100 };
         int ypos{ 100 };
         int width{ 800 };
@@ -18,12 +21,13 @@ namespace Engine {
         const char* title{ "Engine Window" };
     };
 
-    class Window final : NonCopyable {
+    class ENGINE_API Window final : NonCopyable {
     public:
         explicit Window(const WindowSettings& settings);
         ~Window() override;
 
         [[nodiscard]] GLFWwindow* GetRawGLFW() const;
+        [[nodiscard]] std::pair<int, int> GetExtent() const;
         [[nodiscard]] bool IsValid() const;
         [[nodiscard]] bool ShouldClose() const;
 

@@ -1,20 +1,21 @@
 #ifndef ENGINE_WINDOWSYSTEM_H
 #define ENGINE_WINDOWSYSTEM_H
 
+#include "Macro.h"
 #include "Singleton.h"
-#include "Window/Window.h"
-#include <memory>
+#include "Window.h"
 #include <utility>
+#include <memory>
 
 namespace Engine {
 
     constexpr uint32_t gMainWindowId = 1;
 
-    class WindowSystem final : public Singleton<WindowSystem> {
+    class ENGINE_API WindowSystem final : public Singleton<WindowSystem> {
         friend class Singleton;
 
     public:
-        std::pair<uint32_t, std::shared_ptr<Window>> CreateWindow(const WindowSettings& settings) const;
+        [[nodiscard]] std::pair<uint32_t, std::shared_ptr<Window>> CreateWindow(const WindowSettings& settings) const;
         void DeleteWindow(uint32_t windowId) const;
         void OnUpdate() const;
 

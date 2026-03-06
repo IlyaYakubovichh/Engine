@@ -1,9 +1,7 @@
 #include "WindowSystem/WindowSystem.h"
+#include "VulkanSystem/VulkanSystem.h"
 #include "LogSystem/LogSystem.h"
-
 #include <GLFW/glfw3.h>
-#include <unordered_map>
-#include <ranges>
 
 namespace Engine {
 
@@ -23,17 +21,17 @@ namespace Engine {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // TODO: make resizable
 
             mInitialized = true;
-            ENGINE_LOG_INFO("WindowSystem", "GLFW initialized successfully");
+            ENGINE_LOG_DEBUG("WindowSystem", "GLFW initialized successfully");
         }
 
         ~Impl() {
             mWindows.clear();
-            ENGINE_LOG_INFO("WindowSystem", "All windows destroyed");
+            ENGINE_LOG_DEBUG("WindowSystem", "All windows destroyed");
 
             if (mInitialized) {
                 glfwSetErrorCallback(nullptr);
                 glfwTerminate();
-                ENGINE_LOG_INFO("WindowSystem", "GLFW terminated");
+                ENGINE_LOG_DEBUG("WindowSystem", "GLFW terminated");
             }
         }
 
@@ -54,10 +52,10 @@ namespace Engine {
                 return { 0, nullptr };
             }
 
-            const uint32_t windowId  = ++mCurrentWindowId;
-            mWindows[windowId]       = window;
+            const uint32_t windowId = ++mCurrentWindowId;
+            mWindows[windowId]      = window;
 
-            ENGINE_LOG_INFO("WindowSystem", "Window created with id: {}", windowId);
+            ENGINE_LOG_DEBUG("WindowSystem", "Window created with id: {}", windowId);
             return { windowId, window };
         }
 
@@ -97,6 +95,7 @@ namespace Engine {
             while (it != mWindows.end()) {
                 if (it->second->ShouldClose()) {
                     ENGINE_LOG_INFO("WindowSystem", "Removed closed window with id: {}", it->first);
+                    VulkanSystem::GetInstance()->DestroyVulkanWindowContext(it->first);
                     it = mWindows.erase(it);
                     continue;
                 }

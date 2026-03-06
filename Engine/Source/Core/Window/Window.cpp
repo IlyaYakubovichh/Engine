@@ -3,7 +3,9 @@
 //
 
 #include "Window.h"
+#include "Macro.h"
 #include "LogSystem/LogSystem.h"
+#include <GLFW/glfw3.h>
 
 namespace Engine {
 
@@ -28,9 +30,13 @@ namespace Engine {
         }
     }
 
-    GLFWwindow* Window::GetRawGLFW() const {
+    GLFWwindow *Window::GetRawGLFW() const {
         ENGINE_ASSERT_MESSAGE(mWindow != nullptr, "Attempting to access nullptr GLFWwindow!");
         return mWindow;
+    }
+
+    std::pair<int, int> Window::GetExtent() const {
+        return std::make_pair(mSettings.width, mSettings.height);
     }
 
     bool Window::IsValid() const {

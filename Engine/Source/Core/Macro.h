@@ -29,25 +29,32 @@
 // Assert definitions
 #ifdef ENGINE_ENABLE_ASSERTS
 
-    #define ENGINE_ASSERT(x)                                                                \
-    do {                                                                                    \
-        if(!(x)) {                                                                          \
-            ENGINE_LOG_FATAL("Assertion", "Assertion Failed: " #x);                         \
-            ENGINE_DEBUGBREAK();                                                            \
-        }                                                                                   \
+    #define ENGINE_ASSERT(x)                                                                            \
+        do {                                                                                            \
+            if (!(x)) {                                                                                 \
+                ENGINE_LOG_FATAL("Assertion", "Failed: " #x " in " __FILE__ " (" << __LINE__ << ")");   \
+                ENGINE_DEBUGBREAK();                                                                    \
+            }                                                                                           \
+        } while(0)
+
+    #define ENGINE_ASSERT_MESSAGE(x, msg)           \
+    do {                                            \
+        if(!(x)) {                                  \
+            ENGINE_LOG_FATAL("Assertion", msg);     \
+            ENGINE_DEBUGBREAK();                    \
+        }                                           \
     } while(0)
 
-    #define ENGINE_ASSERT_MESSAGE(x, msg)                                                   \
-    do {                                                                                    \
-        if(!(x)) {                                                                          \
-            ENGINE_LOG_FATAL("Assertion", msg);                                             \
-            ENGINE_DEBUGBREAK();                                                            \
-        }                                                                                   \
-    } while(0)
+    #define ENGINE_STATIC_ASSERT(expr) \
+    static_assert(expr, "Static assertion failed: " #expr)
+
 #else
     // Strip asserts in Release builds
     #define ENGINE_ASSERT(x)
     #define ENGINE_ASSERT_MESSAGE(x, msg)
 #endif
+
+#define LEFT_SHIFT(value) ((value) << 1)
+#define RIGHT_SHIFT(value) ((value) >> 1)
 
 #endif //ENGINE_MACRO_H

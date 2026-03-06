@@ -111,7 +111,6 @@ namespace Engine {
         }
 
         void InitDevice() {
-            // Physical device
             VkPhysicalDeviceVulkan13Features features13 {
                 .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
                 .synchronization2 = VK_TRUE,
@@ -138,7 +137,6 @@ namespace Engine {
 
             ENGINE_LOG_INFO("VulkanSystem", "Physical device selected: {}", physResult->name);
 
-            // Logical device
             auto devResult = vkb::DeviceBuilder{ physResult.value() }.build();
             if (!devResult) {
                 ENGINE_LOG_ERROR("VulkanSystem", "Failed to create logical device: {}", devResult.error().message());
@@ -146,20 +144,31 @@ namespace Engine {
             }
 
             // Graphics queue
-            auto queueResult = devResult->get_queue(vkb::QueueType::graphics);
-            auto indexResult = devResult->get_queue_index(vkb::QueueType::graphics);
-            if (!queueResult || !indexResult) {
+            auto graphicsQueue      = devResult->get_queue(vkb::QueueType::graphics);
+            auto graphicsQueueIndex = devResult->get_queue_index(vkb::QueueType::graphics);
+            if (!graphicsQueue || !graphicsQueueIndex) {
                 ENGINE_LOG_ERROR("VulkanSystem", "Failed to get graphics queue");
                 return;
             }
 
-            mPhysicalDevice    = physResult->physical_device;
-            mDevice            = devResult->device;
-            mGraphicsQueue     = queueResult.value();
-            mGraphicsQueueIndex = indexResult.value();
+            // Presentation queue
+            auto presentQueue      = devResult->get_queue(vkb::QueueType::present);
+            auto presentQueueIndex = devResult->get_queue_index(vkb::QueueType::present);
+            if (!presentQueue || !presentQueueIndex) {
+                ENGINE_LOG_ERROR("VulkanSystem", "Failed to get present queue");
+                return;
+            }
+
+            mPhysicalDevice         = physResult->physical_device;
+            mDevice                 = devResult->device;
+            mGraphicsQueue          = graphicsQueue.value();
+            mGraphicsQueueIndex     = graphicsQueueIndex.value();
+            mPresentationQueue      = presentQueue.value();
+            mPresentationQueueIndex = presentQueueIndex.value();
 
             ENGINE_LOG_INFO("VulkanSystem", "Logical device created successfully");
             ENGINE_LOG_INFO("VulkanSystem", "Graphics queue index: {}", mGraphicsQueueIndex);
+            ENGINE_LOG_INFO("VulkanSystem", "Present queue index:  {}", mPresentationQueueIndex);
         }
 
 // ---------------------------------------------------------------------------
@@ -172,7 +181,9 @@ namespace Engine {
         VkPhysicalDevice         mPhysicalDevice     { VK_NULL_HANDLE };
         VkDevice                 mDevice             { VK_NULL_HANDLE };
         VkQueue                  mGraphicsQueue      { VK_NULL_HANDLE };
-        uint32_t                 mGraphicsQueueIndex { 0 };
+        VkQueue                  mPresentationQueue  { VK_NULL_HANDLE };
+        uint32_t                 mGraphicsQueueIndex     { 0 };
+        uint32_t                 mPresentationQueueIndex { 0 };
 
 #ifdef ENGINE_DEBUG
         VkDebugUtilsMessengerEXT mDebugMessenger     { VK_NULL_HANDLE };

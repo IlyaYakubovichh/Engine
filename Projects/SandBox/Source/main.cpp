@@ -6,6 +6,9 @@ int main() {
 
     application->Start();
 
+    application->CreateWindow({ 200, 200, 800, 600, "Window 2" });
+    application->CreateWindow({ 300, 300, 800, 600, "Window 3" });
+
     application->PushLayer(new SandBoxGraphicsLayer());
 
     application->Run();

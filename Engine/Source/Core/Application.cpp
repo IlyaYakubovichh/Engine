@@ -7,18 +7,27 @@
 namespace Engine {
 
     void Application::Start() {
-        LogSystem::Start();         ENGINE_LOG_INFO("Engine", "LogSystem ON!");
-        LayerSystem::Start();       ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
+        LogSystem::Start();    ENGINE_LOG_INFO("Engine", "LogSystem ON!");
+        LayerSystem::Start();  ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
 
-        WindowSystem::Start();      ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
-        WindowSystem::GetInstance()->CreateWindow(WindowSettings{});
+        WindowSystem::Start(); ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
+        auto [id, window] = WindowSystem::GetInstance()->CreateWindow({ 100, 100, 800, 600, "Main Window" });
 
-        VulkanSystem::Start();      ENGINE_LOG_INFO("Engine", "VulkanSystem ON!");
+        VulkanSystem::Start(); ENGINE_LOG_INFO("Engine", "VulkanSystem ON!");
+        VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
+    }
+
+    std::pair<uint32_t, std::shared_ptr<Window>> Application::CreateWindow(const WindowSettings& settings) {
+        auto [id, window] = WindowSystem::GetInstance()->CreateWindow(settings);
+        if (window) {
+            VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
+        }
+        return { id, window };
     }
 
     void Application::Run() {
         const auto& windowSystem = WindowSystem::GetInstance();
-        const auto& layerSystem = LayerSystem::GetInstance();
+        const auto& layerSystem  = LayerSystem::GetInstance();
 
         while (!windowSystem->AreAllWindowsClosed()) {
             for (const auto& layer : layerSystem->GetLayers()) {
@@ -26,7 +35,6 @@ namespace Engine {
                     // layer->OnUpdate();
                 }
             }
-
             windowSystem->OnUpdate();
         }
     }
@@ -39,27 +47,19 @@ namespace Engine {
     }
 
     void Application::PushLayer(Layer* layer) {
-        if (layer) {
-            LayerSystem::GetInstance()->PushLayer(layer);
-        }
+        if (layer) LayerSystem::GetInstance()->PushLayer(layer);
     }
 
     void Application::PushOverlay(Layer* overlay) {
-        if (overlay) {
-            LayerSystem::GetInstance()->PushOverlay(overlay);
-        }
+        if (overlay) LayerSystem::GetInstance()->PushOverlay(overlay);
     }
 
     void Application::PopLayer(const Layer* layer) {
-        if (layer) {
-            LayerSystem::GetInstance()->PopLayer(layer);
-        }
+        if (layer) LayerSystem::GetInstance()->PopLayer(layer);
     }
 
     void Application::PopOverlay(const Layer* overlay) {
-        if (overlay) {
-            LayerSystem::GetInstance()->PopOverlay(overlay);
-        }
+        if (overlay) LayerSystem::GetInstance()->PopOverlay(overlay);
     }
 
-}
+} // namespace Engine

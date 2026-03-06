@@ -28,11 +28,11 @@ namespace Engine {
 
     // Severity enum
     enum class LogSeverityLevel : uint8_t {
-        None = 0,
+        None  = LEFT_SHIFT(0),
         Trace,
         Debug,
-        Info,
-        Warn,
+        Info ,
+        Warn ,
         Error,
         Fatal,
     };

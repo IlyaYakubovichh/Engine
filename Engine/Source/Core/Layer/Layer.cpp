@@ -14,12 +14,4 @@ namespace Engine {
 
     Layer::~Layer() = default;
 
-    void Layer::OnUpdate() const {
-        ENGINE_LOG_INFO("Layer {}", "OnUpdate called!", mName);
-    }
-
-    void Layer::OnEvent() const {
-
-    }
-
 }

@@ -16,6 +16,11 @@ public:
     ~SandBoxGraphicsLayer() override {
 
     }
+
+    void OnAttach() const override;
+    void OnDetach() const override;
+    void OnUpdate() const override;
+    void OnEvent() const override;
 };
 
 

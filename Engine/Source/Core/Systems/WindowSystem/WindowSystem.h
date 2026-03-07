@@ -9,7 +9,7 @@
 
 namespace Engine {
 
-    constexpr uint32_t gMainWindowId = 1;
+    constexpr uint32_t gMainWindowId = 0;
 
     class ENGINE_API WindowSystem final : public Singleton<WindowSystem> {
         friend class Singleton;

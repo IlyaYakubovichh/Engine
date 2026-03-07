@@ -32,7 +32,7 @@ namespace Engine {
         while (!windowSystem->AreAllWindowsClosed()) {
             for (const auto& layer : layerSystem->GetLayers()) {
                 if (layer) {
-                    // layer->OnUpdate();
+                    layer->OnUpdate();
                 }
             }
             windowSystem->OnUpdate();
@@ -40,6 +40,8 @@ namespace Engine {
     }
 
     void Application::Shutdown() {
+        DetachLayers();
+
         ENGINE_LOG_INFO("Engine", "VulkanSystem OFF!");  VulkanSystem::Shutdown();
         ENGINE_LOG_INFO("Engine", "WindowSystem OFF!");  WindowSystem::Shutdown();
         ENGINE_LOG_INFO("Engine", "LayerSystem OFF!");   LayerSystem::Shutdown();
@@ -47,19 +49,39 @@ namespace Engine {
     }
 
     void Application::PushLayer(Layer* layer) {
-        if (layer) LayerSystem::GetInstance()->PushLayer(layer);
+        if (layer) {
+            layer->OnAttach();
+            LayerSystem::GetInstance()->PushLayer(layer);
+        }
     }
 
     void Application::PushOverlay(Layer* overlay) {
-        if (overlay) LayerSystem::GetInstance()->PushOverlay(overlay);
+        if (overlay) {
+            overlay->OnAttach();
+            LayerSystem::GetInstance()->PushOverlay(overlay);
+        }
     }
 
     void Application::PopLayer(const Layer* layer) {
-        if (layer) LayerSystem::GetInstance()->PopLayer(layer);
+        if (layer) {
+            layer->OnDetach();
+            LayerSystem::GetInstance()->PopLayer(layer);
+        }
     }
 
     void Application::PopOverlay(const Layer* overlay) {
-        if (overlay) LayerSystem::GetInstance()->PopOverlay(overlay);
+        if (overlay) {
+            overlay->OnDetach();
+            LayerSystem::GetInstance()->PopOverlay(overlay);
+        }
+    }
+
+    void Application::DetachLayers() {
+        for (const auto& layerSystem  = LayerSystem::GetInstance(); const auto& layer : layerSystem->GetLayers()) {
+            if (layer) {
+                layer->OnDetach();
+            }
+        }
     }
 
 } // namespace Engine

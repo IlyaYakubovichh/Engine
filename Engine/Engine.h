@@ -17,4 +17,9 @@
 #include "Systems/WindowSystem/WindowSystem.h"
 #include "Systems/VulkanSystem/VulkanSystem.h"
 
+// Renderer
+#include "Renderer.h"
+#include "RendererAPI.h"
+#include "VulkanRenderer/VulkanRendererAPI.h"
+
 #endif //ENGINE_ENGINE_H

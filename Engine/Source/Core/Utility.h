@@ -5,7 +5,13 @@
 #ifndef ENGINE_UTILITY_H
 #define ENGINE_UTILITY_H
 
+#include <memory>
+
 namespace Engine {
+
+    // Aliases
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
 
     // Using rule of five
     class NonCopyable {

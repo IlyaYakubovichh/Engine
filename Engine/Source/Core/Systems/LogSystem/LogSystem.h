@@ -8,6 +8,7 @@
 #include "Macro.h"
 #include "Singleton.h"
 #include <memory>
+#include <format>
 #include <string_view>
 
 // Settings

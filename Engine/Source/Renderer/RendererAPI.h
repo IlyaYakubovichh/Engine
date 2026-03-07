@@ -1,0 +1,36 @@
+// RendererAPI.h
+#pragma once
+
+#include "Utility.h"
+#include "Macro.h"
+
+namespace Engine {
+
+    enum class API : uint8_t {
+        None   = LEFT_SHIFT(0),
+        Vulkan = LEFT_SHIFT(1),
+    };
+
+    class ENGINE_API RendererAPI {
+    public:
+        static Ref<RendererAPI> Create(API api);
+
+        virtual void Start()    = 0;
+        virtual void Shutdown() = 0;
+
+        virtual void BeginFrame()      = 0;
+        virtual void EndFrame()        = 0;
+        virtual void BeginRenderPass() = 0;
+        virtual void EndRenderPass()   = 0;
+        virtual void Present()         = 0;
+
+        const API& GetAPI() const { return mAPI; }
+
+    protected:
+        explicit RendererAPI() = default;
+        virtual ~RendererAPI() = default;
+
+        API mAPI { API::None };
+    };
+
+} // Engine

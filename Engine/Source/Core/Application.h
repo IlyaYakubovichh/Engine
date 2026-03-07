@@ -23,6 +23,9 @@ namespace Engine {
         void PushOverlay(Layer* overlay);
         void PopLayer(const Layer* layer);
         void PopOverlay(const Layer* overlay);
+
+    private:
+        void DetachLayers();
     };
 
 } // namespace Engine

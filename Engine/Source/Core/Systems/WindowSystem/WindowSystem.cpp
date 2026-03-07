@@ -52,8 +52,8 @@ namespace Engine {
                 return { 0, nullptr };
             }
 
-            const uint32_t windowId = ++mCurrentWindowId;
-            mWindows[windowId]      = window;
+            const uint32_t windowId = mCurrentWindowId++;
+            mWindows[windowId] = window;
 
             ENGINE_LOG_DEBUG("WindowSystem", "Window created with id: {}", windowId);
             return { windowId, window };

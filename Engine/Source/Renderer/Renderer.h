@@ -19,7 +19,7 @@ namespace Engine {
 
     class ENGINE_API Renderer final {
     public:
-        static void Start(const RendererSettings& settings);
+        static void Initialize(const RendererSettings& settings);
         static void Shutdown();
 
         static void BeginFrame();

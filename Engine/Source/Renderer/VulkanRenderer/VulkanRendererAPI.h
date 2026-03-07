@@ -1,7 +1,7 @@
-// VulkanRendererAPI.h
 #pragma once
 
 #include "RendererAPI.h"
+#include "VulkanRendererData.h"
 #include "Macro.h"
 
 namespace Engine {
@@ -11,14 +11,17 @@ namespace Engine {
         VulkanRendererAPI();
         ~VulkanRendererAPI() override = default;
 
-        void Start()    override;
-        void Shutdown() override;
+        void Initialize() override;
+        void Shutdown()   override;
 
         void BeginFrame()      override;
         void EndFrame()        override;
         void BeginRenderPass() override;
         void EndRenderPass()   override;
         void Present()         override;
+
+    private:
+        VulkanRendererData mData;
     };
 
 } // Engine

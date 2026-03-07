@@ -15,8 +15,8 @@ namespace Engine {
     public:
         static Ref<RendererAPI> Create(API api);
 
-        virtual void Start()    = 0;
-        virtual void Shutdown() = 0;
+        virtual void Initialize() = 0;
+        virtual void Shutdown()   = 0;
 
         virtual void BeginFrame()      = 0;
         virtual void EndFrame()        = 0;
@@ -24,7 +24,7 @@ namespace Engine {
         virtual void EndRenderPass()   = 0;
         virtual void Present()         = 0;
 
-        const API& GetAPI() const { return mAPI; }
+        [[nodiscard]] const API& GetAPI() const { return mAPI; }
 
     protected:
         explicit RendererAPI() = default;

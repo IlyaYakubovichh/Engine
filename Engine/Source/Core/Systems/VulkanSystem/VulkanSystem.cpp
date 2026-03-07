@@ -44,42 +44,25 @@ namespace Engine {
         // Per-window context
         // -----------------------------------------------------------------------
         void CreateWindowContext(const uint32_t windowId, const std::shared_ptr<Window>& window) {
-            VulkanWindowContext* currentContext = nullptr;
             auto it = mWindowContexts.find(windowId);
-
-            if (it != mWindowContexts.end()) {
-                currentContext = &it->second;
-            } else {
-                VulkanWindowContext newContext;
-                VULKAN_CHECK(glfwCreateWindowSurface(mInstance, window->GetRawGLFW(), nullptr, &newContext.surface));
+            if (it == mWindowContexts.end()) {
+                VulkanWindowContext ctx;
+                VULKAN_CHECK(glfwCreateWindowSurface(mInstance, window->GetRawGLFW(), nullptr, &ctx.surface));
                 ENGINE_LOG_DEBUG("VulkanSystem", "Surface created for window {}", windowId);
-                auto [inserted_it, ok] = mWindowContexts.emplace(windowId, std::move(newContext));
-                currentContext = &inserted_it->second;
+                it = mWindowContexts.emplace(windowId, std::move(ctx)).first;
             }
 
-            auto [width, height]        = window->GetExtent();
-            currentContext->imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-            currentContext->extent      = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+            auto [width, height] = window->GetExtent();
+            auto&[surface, swapchain] = it->second;
 
-            vkb::SwapchainBuilder builder{ mPhysicalDevice, mDevice, currentContext->surface };
-            auto result = builder
-                .set_desired_format({ currentContext->imageFormat, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR })
-                .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-                .set_desired_extent(currentContext->extent.width, currentContext->extent.height)
-                .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
-                .build();
-
-            if (!result) {
-                ENGINE_LOG_ERROR("VulkanSystem", "Failed to build swapchain for window {}: {}", windowId, result.error().message());
-                return;
-            }
-
-            vkb::Swapchain vkbSwapchain = result.value();
-            currentContext->swapchain   = vkbSwapchain.swapchain;
-            currentContext->images      = vkbSwapchain.get_images().value();
-            currentContext->imageViews  = vkbSwapchain.get_image_views().value();
-
-            ENGINE_LOG_DEBUG("VulkanSystem", "Swapchain created for window {} ({}x{})", windowId, currentContext->extent.width, currentContext->extent.height);
+            swapchain = std::make_shared<VulkanSwapchain>();
+            swapchain->Initialize(VulkanSwapchainSpecification {
+                .physicalDevice = mPhysicalDevice,
+                .device         = mDevice,
+                .surface        = surface,
+                .width          = static_cast<uint32_t>(width),
+                .height         = static_cast<uint32_t>(height),
+            });
         }
 
         void DestroyWindowContext(const uint32_t windowId) {
@@ -89,13 +72,13 @@ namespace Engine {
                 return;
             }
 
-            const auto& ctx = it->second;
+            auto&[surface, swapchain] = it->second;
 
-            for (const auto& view : ctx.imageViews)
-                vkDestroyImageView(mDevice, view, nullptr);
+            if (swapchain) {
+                swapchain->Destroy(mDevice);
+            }
 
-            vkDestroySwapchainKHR(mDevice, ctx.swapchain, nullptr);
-            vkDestroySurfaceKHR(mInstance, ctx.surface, nullptr);
+            vkDestroySurfaceKHR(mInstance, surface, nullptr);
 
             ENGINE_LOG_DEBUG("VulkanSystem", "VulkanWindowContext destroyed for window {}", windowId);
             mWindowContexts.erase(it);

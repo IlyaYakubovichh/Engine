@@ -8,7 +8,7 @@ void SandBoxGraphicsLayer::OnAttach() const {
     settings.rendererAPI = Engine::API::Vulkan;
     settings.rendererType = Engine::RendererType::Renderer2D;
 
-    Engine::Renderer::Start(settings);
+    Engine::Renderer::Initialize(settings);
 }
 
 void SandBoxGraphicsLayer::OnDetach() const {

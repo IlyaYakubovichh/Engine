@@ -6,7 +6,7 @@ namespace Engine {
     Ref<RendererAPI> Renderer::sRendererAPI;
     RendererSettings Renderer::sRendererSettings;
 
-    void Renderer::Start(const RendererSettings& settings) {
+    void Renderer::Initialize(const RendererSettings& settings) {
         sRendererSettings = settings;
 
         // RendererAPI
@@ -17,7 +17,7 @@ namespace Engine {
         }
 
         // Start
-        sRendererAPI->Start();
+        sRendererAPI->Initialize();
     }
 
     void Renderer::Shutdown() {

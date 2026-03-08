@@ -33,4 +33,6 @@ namespace Engine {
     void Renderer::EndRenderPass()   { sRendererAPI->EndRenderPass();   }
     void Renderer::Present()         { sRendererAPI->Present();         }
 
+    void Renderer::Clear(glm::vec4 clearColor) { sRendererAPI->Clear(clearColor); }
+
 } // Engine

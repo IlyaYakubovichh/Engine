@@ -31,7 +31,7 @@ namespace Engine {
         [[nodiscard]] const VulkanFrame& CurrentFrame() const { return frames[currentFrameIndex]; }
 
         [[nodiscard]] VkCommandBuffer CurrentCommandBuffer()            const { return frames[currentFrameIndex].GetCommandBuffer();            }
-        [[nodiscard]] VkSemaphore     CurrentRenderFinishedSemaphore()  const { return frames[currentFrameIndex].GetRenderFinishedSemaphore();  }
+        [[nodiscard]] VkSemaphore     CurrentRenderFinishedSemaphore()  const { return frames[currentFrameIndex].GetImageAvailableSemaphore();  }
         [[nodiscard]] VkFence         CurrentInFlightFence()            const { return frames[currentFrameIndex].GetInFlightFence();            }
     };
 

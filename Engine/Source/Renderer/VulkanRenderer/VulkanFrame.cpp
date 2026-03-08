@@ -35,8 +35,8 @@ namespace Engine {
         constexpr VkSemaphoreCreateInfo semaphoreInfo {
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         };
-        VULKAN_CHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &mRenderFinishedSemaphore));
-        ENGINE_ASSERT_MESSAGE(mRenderFinishedSemaphore != VK_NULL_HANDLE, "VulkanFrame::Init — failed to create semaphore");
+        VULKAN_CHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &mImageAvailableSemaphore));
+        ENGINE_ASSERT_MESSAGE(mImageAvailableSemaphore != VK_NULL_HANDLE, "VulkanFrame::Init — failed to create semaphore");
 
         // Fence
         constexpr VkFenceCreateInfo fenceInfo {
@@ -56,8 +56,8 @@ namespace Engine {
         ENGINE_ASSERT_MESSAGE(device != VK_NULL_HANDLE, "VulkanFrame::Destroy — device is null");
 
         // Semaphore
-        if (mRenderFinishedSemaphore != VK_NULL_HANDLE)
-            vkDestroySemaphore(device, mRenderFinishedSemaphore, nullptr);
+        if (mImageAvailableSemaphore != VK_NULL_HANDLE)
+            vkDestroySemaphore(device, mImageAvailableSemaphore, nullptr);
 
         // Fence
         if (mInFlightFence != VK_NULL_HANDLE)
@@ -67,7 +67,7 @@ namespace Engine {
         if (mCommandPool != VK_NULL_HANDLE)
             vkDestroyCommandPool(device, mCommandPool, nullptr);
 
-        mRenderFinishedSemaphore = VK_NULL_HANDLE;
+        mImageAvailableSemaphore = VK_NULL_HANDLE;
         mInFlightFence           = VK_NULL_HANDLE;
         mCommandPool             = VK_NULL_HANDLE;
         mCommandBuffer           = VK_NULL_HANDLE;

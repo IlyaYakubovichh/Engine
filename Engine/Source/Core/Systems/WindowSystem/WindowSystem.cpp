@@ -95,7 +95,10 @@ namespace Engine {
             while (it != mWindows.end()) {
                 if (it->second->ShouldClose()) {
                     ENGINE_LOG_INFO("WindowSystem", "Removed closed window with id: {}", it->first);
+
+                    VulkanSystem::GetInstance()->WaitDeviceIdle();
                     VulkanSystem::GetInstance()->DestroyVulkanWindowContext(it->first);
+
                     it = mWindows.erase(it);
                     continue;
                 }

@@ -9,15 +9,15 @@
 
 namespace Engine {
 
-    void VulkanSwapchain::Initialize(const VulkanSwapchainSpecification& desc) {
+    void VulkanSwapchain::Initialize(const VulkanSwapchainSpecification& specification) {
         ENGINE_ASSERT_MESSAGE(!mInitialized,      "VulkanSwapchain::Init — already initialized");
-        ENGINE_ASSERT_MESSAGE(desc.device         != VK_NULL_HANDLE, "VulkanSwapchain::Init — device is null");
-        ENGINE_ASSERT_MESSAGE(desc.physicalDevice != VK_NULL_HANDLE, "VulkanSwapchain::Init — physicalDevice is null");
-        ENGINE_ASSERT_MESSAGE(desc.surface        != VK_NULL_HANDLE, "VulkanSwapchain::Init — surface is null");
+        ENGINE_ASSERT_MESSAGE(specification.device         != VK_NULL_HANDLE, "VulkanSwapchain::Init — device is null");
+        ENGINE_ASSERT_MESSAGE(specification.physicalDevice != VK_NULL_HANDLE, "VulkanSwapchain::Init — physicalDevice is null");
+        ENGINE_ASSERT_MESSAGE(specification.surface        != VK_NULL_HANDLE, "VulkanSwapchain::Init — surface is null");
 
-        CreateSwapchain(desc);
-        CreateImageViews(desc.device);
-        CreateSemaphores(desc.device);
+        CreateSwapchain(specification);
+        CreateImageViews(specification.device);
+        CreateSemaphores(specification.device);
 
         ENGINE_LOG_DEBUG("VulkanSwapchain", "Swapchain initialized ({}x{}, {} images)", mExtent.width, mExtent.height, mImages.size());
         mInitialized = true;
@@ -28,7 +28,7 @@ namespace Engine {
 
         ENGINE_ASSERT_MESSAGE(device != VK_NULL_HANDLE, "VulkanSwapchain::Destroy — device is null");
 
-        for (const auto semaphore : mImageAvailableSemaphores)
+        for (const auto semaphore : mRenderFinishedSemaphores)
             vkDestroySemaphore(device, semaphore, nullptr);
 
         for (const auto view : mImageViews)
@@ -36,7 +36,7 @@ namespace Engine {
 
         vkDestroySwapchainKHR(device, mSwapchain, nullptr);
 
-        mImageAvailableSemaphores.clear();
+        mRenderFinishedSemaphores.clear();
         mImageViews.clear();
         mImages.clear();
         mSwapchain   = VK_NULL_HANDLE;
@@ -45,7 +45,7 @@ namespace Engine {
         ENGINE_LOG_DEBUG("VulkanSwapchain", "Swapchain destroyed");
     }
 
-    uint32_t VulkanSwapchain::AcquireNextImage(VkDevice device, const uint64_t timeout) const {
+    uint32_t VulkanSwapchain::AcquireNextImage(VkDevice device, VkSemaphore imageAvailableSemaphore) const {
         ENGINE_ASSERT_MESSAGE(mInitialized, "VulkanSwapchain::AcquireNextImage — not initialized");
 
         uint32_t imageIndex = 0;
@@ -53,8 +53,8 @@ namespace Engine {
         VULKAN_CHECK(vkAcquireNextImageKHR(
             device,
             mSwapchain,
-            timeout,
-            mImageAvailableSemaphores[imageIndex],
+            UINT32_MAX,
+            imageAvailableSemaphore,
             VK_NULL_HANDLE,
             &imageIndex
         ));
@@ -62,9 +62,9 @@ namespace Engine {
         return imageIndex;
     }
 
-    VkSemaphore VulkanSwapchain::GetImageAvailableSemaphore(const uint32_t imageIndex) const {
-        ENGINE_ASSERT_MESSAGE(imageIndex < mImageAvailableSemaphores.size(), "VulkanSwapchain::GetImageAvailableSemaphore — index out of range");
-        return mImageAvailableSemaphores[imageIndex];
+    VkSemaphore VulkanSwapchain::GetRenderFinishedSemaphore(const uint32_t imageIndex) const {
+        ENGINE_ASSERT_MESSAGE(imageIndex < mRenderFinishedSemaphores.size(), "VulkanSwapchain::GetImageAvailableSemaphore — index out of range");
+        return mRenderFinishedSemaphores[imageIndex];
     }
 
     // -------------------------------------------------------------------------
@@ -109,13 +109,13 @@ namespace Engine {
     }
 
     void VulkanSwapchain::CreateSemaphores(VkDevice device) {
-        mImageAvailableSemaphores.resize(mImages.size(), VK_NULL_HANDLE);
+        mRenderFinishedSemaphores.resize(mImages.size(), VK_NULL_HANDLE);
 
         constexpr VkSemaphoreCreateInfo semaphoreInfo {
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         };
 
-        for (auto& semaphore : mImageAvailableSemaphores) {
+        for (auto& semaphore : mRenderFinishedSemaphores) {
             VULKAN_CHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &semaphore));
             ENGINE_ASSERT_MESSAGE(semaphore != VK_NULL_HANDLE, "VulkanSwapchain: failed to create imageAvailable semaphore");
         }

@@ -18,11 +18,10 @@ void SandBoxGraphicsLayer::OnDetach() const {
 void SandBoxGraphicsLayer::OnUpdate() const {
     Engine::Renderer::BeginFrame();
     Engine::Renderer::BeginRenderPass();
+    Engine::Renderer::Clear(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
     Engine::Renderer::EndRenderPass();
     Engine::Renderer::EndFrame();
     Engine::Renderer::Present();
-
-    ENGINE_LOG_INFO("SandBoxGraphicsLayer", "OnUpdate called!");
 }
 
 void SandBoxGraphicsLayer::OnEvent() const {

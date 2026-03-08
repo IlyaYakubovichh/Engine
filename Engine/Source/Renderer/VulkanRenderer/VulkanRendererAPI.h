@@ -3,6 +3,7 @@
 #include "RendererAPI.h"
 #include "VulkanRendererData.h"
 #include "Macro.h"
+#include <glm/glm.hpp>
 
 namespace Engine {
 
@@ -19,6 +20,8 @@ namespace Engine {
         void BeginRenderPass() override;
         void EndRenderPass()   override;
         void Present()         override;
+
+        void Clear(glm::vec4 clearColor) override;
 
     private:
         VulkanRendererData mData;

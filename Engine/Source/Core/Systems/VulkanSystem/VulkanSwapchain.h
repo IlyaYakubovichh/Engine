@@ -25,10 +25,10 @@ namespace Engine {
         VulkanSwapchain()  = default;
         ~VulkanSwapchain() override = default;
 
-        void Initialize(const VulkanSwapchainSpecification& desc);
+        void Initialize(const VulkanSwapchainSpecification& specification);
         void Destroy(VkDevice device);
 
-        [[nodiscard]] uint32_t AcquireNextImage(VkDevice device, uint64_t timeout = UINT64_MAX) const;
+        [[nodiscard]] uint32_t AcquireNextImage(VkDevice device, VkSemaphore imageAvailableSemaphore) const;
 
         // Getters
         [[nodiscard]] VkSwapchainKHR                   GetSwapchain()     const { return mSwapchain;   }
@@ -39,7 +39,7 @@ namespace Engine {
         [[nodiscard]] uint32_t                         GetImageCount()    const { return static_cast<uint32_t>(mImages.size()); }
 
         // One semaphore per swapchain image — indexed by the imageIndex from AcquireNextImage
-        [[nodiscard]] VkSemaphore GetImageAvailableSemaphore(uint32_t imageIndex) const;
+        [[nodiscard]] VkSemaphore GetRenderFinishedSemaphore(uint32_t imageIndex) const;
 
     private:
         void CreateSwapchain(const VulkanSwapchainSpecification& desc);
@@ -53,8 +53,8 @@ namespace Engine {
         std::vector<VkImage>     mImages;
         std::vector<VkImageView> mImageViews;
 
-        // One per swapchain image — signals when that image is safe to render into
-        std::vector<VkSemaphore> mImageAvailableSemaphores;
+        // One per swapchain image
+        std::vector<VkSemaphore> mRenderFinishedSemaphores;
 
         bool mInitialized { false };
     };

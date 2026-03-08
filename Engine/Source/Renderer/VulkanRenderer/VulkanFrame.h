@@ -24,13 +24,13 @@ namespace Engine {
 
         // Getters
         [[nodiscard]] VkCommandBuffer GetCommandBuffer()            const { return mCommandBuffer;              }
-        [[nodiscard]] VkSemaphore     GetRenderFinishedSemaphore()  const { return mRenderFinishedSemaphore;    }
+        [[nodiscard]] VkSemaphore     GetImageAvailableSemaphore()  const { return mImageAvailableSemaphore;    }
         [[nodiscard]] VkFence         GetInFlightFence()            const { return mInFlightFence;              }
 
     private:
         VkCommandPool   mCommandPool             { VK_NULL_HANDLE };
         VkCommandBuffer mCommandBuffer           { VK_NULL_HANDLE };
-        VkSemaphore     mRenderFinishedSemaphore { VK_NULL_HANDLE };
+        VkSemaphore     mImageAvailableSemaphore { VK_NULL_HANDLE };
         VkFence         mInFlightFence           { VK_NULL_HANDLE };
         bool            mInitialized             { false };
     };

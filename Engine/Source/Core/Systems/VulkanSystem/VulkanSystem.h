@@ -19,6 +19,8 @@ namespace Engine {
 
         [[nodiscard]] const VulkanWindowContext& GetWindowContext(uint32_t windowId) const;
 
+        void WaitDeviceIdle() const;
+
         [[nodiscard]] VkInstance       GetVkInstance()               const;
         [[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice()         const;
         [[nodiscard]] VkDevice         GetVkDevice()                 const;

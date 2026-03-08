@@ -3,6 +3,7 @@
 #include "RendererAPI.h"
 #include "Macro.h"
 #include "Utility.h"
+#include <glm/glm.hpp>
 
 namespace Engine {
 
@@ -27,6 +28,8 @@ namespace Engine {
         static void BeginRenderPass();
         static void EndRenderPass();
         static void Present();
+
+        static void Clear(glm::vec4 clearColor);
 
         [[nodiscard]] static const API&              GetAPI()             { return sRendererAPI->GetAPI(); }
         [[nodiscard]] static const RendererSettings& GetRendererSettings(){ return sRendererSettings; }

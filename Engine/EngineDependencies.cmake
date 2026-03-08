@@ -45,3 +45,13 @@ FetchContent_MakeAvailable(
         vkbootstrap
 )
 target_link_libraries(Engine PUBLIC vk-bootstrap::vk-bootstrap)
+
+# glm
+FetchContent_Declare(
+        glm
+        URL https://github.com/g-truc/glm/archive/refs/tags/1.0.3.tar.gz
+)
+FetchContent_MakeAvailable(
+        glm
+)
+target_link_libraries(Engine PUBLIC glm)

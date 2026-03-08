@@ -3,6 +3,7 @@
 
 #include "Utility.h"
 #include "Macro.h"
+#include <glm/glm.hpp>
 
 namespace Engine {
 
@@ -23,6 +24,8 @@ namespace Engine {
         virtual void BeginRenderPass() = 0;
         virtual void EndRenderPass()   = 0;
         virtual void Present()         = 0;
+
+        virtual void Clear(glm::vec4 clearColor) = 0;
 
         [[nodiscard]] const API& GetAPI() const { return mAPI; }
 

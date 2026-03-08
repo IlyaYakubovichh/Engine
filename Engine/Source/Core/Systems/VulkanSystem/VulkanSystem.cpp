@@ -90,6 +90,8 @@ namespace Engine {
             return it->second;
         }
 
+        void WaitDeviceIdle() const { vkDeviceWaitIdle(mDevice); }
+
         // Getters
         [[nodiscard]] VkInstance       GetInstance()               const { return mInstance;               }
         [[nodiscard]] VkPhysicalDevice GetPhysicalDevice()         const { return mPhysicalDevice;         }
@@ -264,6 +266,10 @@ namespace Engine {
 
     const VulkanWindowContext& VulkanSystem::GetWindowContext(const uint32_t windowId) const {
         return pImpl->GetWindowContext(windowId);
+    }
+
+    void VulkanSystem::WaitDeviceIdle() const {
+        pImpl->WaitDeviceIdle();
     }
 
     VkInstance       VulkanSystem::GetVkInstance()               const { return pImpl->GetInstance();               }

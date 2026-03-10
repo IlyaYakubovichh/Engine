@@ -55,3 +55,13 @@ FetchContent_MakeAvailable(
         glm
 )
 target_link_libraries(Engine PUBLIC glm)
+
+# vma
+FetchContent_Declare(
+        vma
+        URL https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/archive/refs/tags/v3.3.0.tar.gz
+)
+FetchContent_MakeAvailable(
+        vma
+)
+target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)

@@ -21,6 +21,9 @@ public:
     void OnDetach() const override;
     void OnUpdate() const override;
     void OnEvent() const override;
+
+private:
+    // Ref<Engine::Image> mRenderTarget;
 };
 
 

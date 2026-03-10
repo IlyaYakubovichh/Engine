@@ -1,48 +1,56 @@
 #include "VulkanSystem/VulkanSystem.h"
 #include "WindowSystem/WindowSystem.h"
 #include "LogSystem/LogSystem.h"
+#include "Utility.h"
 #include "VulkanUtility.h"
 #include <VkBootstrap.h>
 #include <GLFW/glfw3.h>
 
+#include <ranges>
+
 namespace Engine {
 
-// ---------------------------------------------------------------------------
-// PIMPL
-// ---------------------------------------------------------------------------
     class VulkanSystem::Impl {
     public:
         Impl() {
+            // Core Vulkan objects
             InitInstance();
             InitMainSurface();
             InitDevice();
+
+            // Subsystems
+            StartMemoryAllocatorSubsystem();
+            StartSyncSubsystem();
         }
 
         ~Impl() {
-            // Vulkan window context
+            // Window contexts
             std::vector<uint32_t> ids;
             ids.reserve(mWindowContexts.size());
             for (const auto& id : mWindowContexts | std::views::keys) ids.push_back(id);
             for (const auto id : ids) DestroyWindowContext(id);
 
-            // Device
+            // Destroy all subsystems in reverse init order automatically.
+            for (const auto & mSubsystem : std::ranges::reverse_view(mSubsystems))
+                mSubsystem->Destroy();
+            mSubsystems.clear();
+
+            // Raw Vulkan objects
             vkDestroyDevice(mDevice, nullptr);
             ENGINE_LOG_DEBUG("VulkanSystem", "Logical device destroyed");
 
-            // Debug messenger
 #ifdef ENGINE_DEBUG
             vkb::destroy_debug_utils_messenger(mInstance, mDebugMessenger);
             ENGINE_LOG_DEBUG("VulkanSystem", "Debug messenger destroyed");
 #endif
 
-            // Instance
             vkDestroyInstance(mInstance, nullptr);
             ENGINE_LOG_DEBUG("VulkanSystem", "Instance destroyed");
         }
 
-        // -----------------------------------------------------------------------
-        // Per-window context
-        // -----------------------------------------------------------------------
+        // -----------------------------------------------------------------
+        // Window contexts
+        // -----------------------------------------------------------------
         void CreateWindowContext(const uint32_t windowId, const std::shared_ptr<Window>& window) {
             auto it = mWindowContexts.find(windowId);
             if (it == mWindowContexts.end()) {
@@ -53,7 +61,7 @@ namespace Engine {
             }
 
             auto [width, height] = window->GetExtent();
-            auto&[surface, swapchain] = it->second;
+            auto& [surface, swapchain] = it->second;
 
             swapchain = std::make_shared<VulkanSwapchain>();
             swapchain->Initialize(VulkanSwapchainSpecification {
@@ -72,14 +80,10 @@ namespace Engine {
                 return;
             }
 
-            auto&[surface, swapchain] = it->second;
-
-            if (swapchain) {
-                swapchain->Destroy(mDevice);
-            }
+            auto& [surface, swapchain] = it->second;
+            if (swapchain) swapchain->Destroy(mDevice);
 
             vkDestroySurfaceKHR(mInstance, surface, nullptr);
-
             ENGINE_LOG_DEBUG("VulkanSystem", "VulkanWindowContext destroyed for window {}", windowId);
             mWindowContexts.erase(it);
         }
@@ -90,9 +94,17 @@ namespace Engine {
             return it->second;
         }
 
+        // -----------------------------------------------------------------
+        // Subsystem accessors
+        // -----------------------------------------------------------------
+        [[nodiscard]] Ref<VulkanMemoryAllocatorSubsystem> GetMemoryAllocatorSubsystem() { return mMemoryAllocatorSubsystem; }
+        [[nodiscard]] Ref<VulkanSyncSubsystem>            GetSyncSubsystem()            { return mSyncSubsystem;            }
+
+        // -----------------------------------------------------------------
+        // Device / queue accessors
+        // -----------------------------------------------------------------
         void WaitDeviceIdle() const { vkDeviceWaitIdle(mDevice); }
 
-        // Getters
         [[nodiscard]] VkInstance       GetInstance()               const { return mInstance;               }
         [[nodiscard]] VkPhysicalDevice GetPhysicalDevice()         const { return mPhysicalDevice;         }
         [[nodiscard]] VkDevice         GetDevice()                 const { return mDevice;                 }
@@ -106,9 +118,18 @@ namespace Engine {
 #endif
 
     private:
-// ---------------------------------------------------------------------------
-// Debug callback
-// ---------------------------------------------------------------------------
+        // -----------------------------------------------------------------
+        // Registers a subsystem
+        // -----------------------------------------------------------------
+        template<std::derived_from<Subsystem> T>
+        Ref<T> AddSubsystem(Ref<T> subsystem) {
+            mSubsystems.push_back(subsystem);
+            return subsystem;
+        }
+
+        // -----------------------------------------------------------------
+        // Init helpers
+        // -----------------------------------------------------------------
 #ifdef ENGINE_DEBUG
         static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
             const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -132,9 +153,6 @@ namespace Engine {
         }
 #endif
 
-// ---------------------------------------------------------------------------
-// Init helpers
-// ---------------------------------------------------------------------------
         void InitInstance() {
             vkb::InstanceBuilder builder;
             builder
@@ -153,8 +171,8 @@ namespace Engine {
                 return;
             }
 
-            mVkbInstance = result.value();
-            mInstance    = result->instance;
+            mVkbInstance    = result.value();
+            mInstance       = result->instance;
 #ifdef ENGINE_DEBUG
             mDebugMessenger = result->debug_messenger;
 #endif
@@ -207,9 +225,9 @@ namespace Engine {
             }
 
             auto gq  = devResult->get_queue(vkb::QueueType::graphics);
-            auto gqi  = devResult->get_queue_index(vkb::QueueType::graphics);
+            auto gqi = devResult->get_queue_index(vkb::QueueType::graphics);
             auto pq  = devResult->get_queue(vkb::QueueType::present);
-            auto pqi  = devResult->get_queue_index(vkb::QueueType::present);
+            auto pqi = devResult->get_queue_index(vkb::QueueType::present);
 
             if (!gq || !gqi || !pq || !pqi) {
                 ENGINE_LOG_ERROR("VulkanSystem", "Failed to get queues");
@@ -228,16 +246,27 @@ namespace Engine {
             ENGINE_LOG_DEBUG("VulkanSystem", "Present queue index:  {}", mPresentationQueueIndex);
         }
 
-// ---------------------------------------------------------------------------
-// Handles
-// ---------------------------------------------------------------------------
+        void StartMemoryAllocatorSubsystem() {
+            auto subsystem = std::make_shared<VulkanMemoryAllocatorSubsystem>();
+            subsystem->Initialize(mInstance, mPhysicalDevice, mDevice);
+            mMemoryAllocatorSubsystem = AddSubsystem(std::move(subsystem));
+        }
+
+        void StartSyncSubsystem() {
+            //mSyncSubsystem = AddSubsystem(std::make_shared<VulkanSyncSubsystem>());
+            //ENGINE_LOG_DEBUG("VulkanSystem", "SyncSubsystem started");
+        }
+
+        // -----------------------------------------------------------------
+        // Members
+        // -----------------------------------------------------------------
         vkb::Instance mVkbInstance {};
 
-        VkInstance       mInstance           { VK_NULL_HANDLE };
-        VkPhysicalDevice mPhysicalDevice     { VK_NULL_HANDLE };
-        VkDevice         mDevice             { VK_NULL_HANDLE };
-        VkQueue          mGraphicsQueue      { VK_NULL_HANDLE };
-        VkQueue          mPresentationQueue  { VK_NULL_HANDLE };
+        VkInstance       mInstance               { VK_NULL_HANDLE };
+        VkPhysicalDevice mPhysicalDevice         { VK_NULL_HANDLE };
+        VkDevice         mDevice                 { VK_NULL_HANDLE };
+        VkQueue          mGraphicsQueue          { VK_NULL_HANDLE };
+        VkQueue          mPresentationQueue      { VK_NULL_HANDLE };
         uint32_t         mGraphicsQueueIndex     { 0 };
         uint32_t         mPresentationQueueIndex { 0 };
 
@@ -246,11 +275,16 @@ namespace Engine {
 #endif
 
         std::unordered_map<uint32_t, VulkanWindowContext> mWindowContexts;
+
+        std::vector<Ref<Subsystem>> mSubsystems;
+
+        Ref<VulkanMemoryAllocatorSubsystem> mMemoryAllocatorSubsystem;
+        Ref<VulkanSyncSubsystem>            mSyncSubsystem;
     };
 
-// ---------------------------------------------------------------------------
-// VulkanSystem - thin shell, delegates everything to Impl
-// ---------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // VulkanSystem public API — all delegated to Impl
+    // -------------------------------------------------------------------------
     VulkanSystem::VulkanSystem()
         : pImpl(std::make_unique<Impl>()) {}
 
@@ -266,6 +300,14 @@ namespace Engine {
 
     const VulkanWindowContext& VulkanSystem::GetWindowContext(const uint32_t windowId) const {
         return pImpl->GetWindowContext(windowId);
+    }
+
+    Ref<VulkanMemoryAllocatorSubsystem> VulkanSystem::GetMemoryAllocatorSubsystem() const {
+        return pImpl->GetMemoryAllocatorSubsystem();
+    }
+
+    Ref<VulkanSyncSubsystem> VulkanSystem::GetSyncSubsystem() const {
+        return pImpl->GetSyncSubsystem();
     }
 
     void VulkanSystem::WaitDeviceIdle() const {

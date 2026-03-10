@@ -5,6 +5,8 @@
 #include "Singleton.h"
 #include "Window.h"
 #include "VulkanSystem/VulkanWindowContext.h"
+#include "VulkanSystem/Subsystems/VulkanMemoryAllocatorSubsystem/VulkanMemoryAllocatorSubsystem.h"
+#include "VulkanSystem/Subsystems/VulkanSyncSubsystem/VulkanSyncSubsystem.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 
@@ -14,13 +16,18 @@ namespace Engine {
         friend class Singleton;
 
     public:
+        // Window contexts
         void CreateVulkanWindowContext(uint32_t windowId, const std::shared_ptr<Window>& window) const;
         void DestroyVulkanWindowContext(uint32_t windowId) const;
-
         [[nodiscard]] const VulkanWindowContext& GetWindowContext(uint32_t windowId) const;
+
+        // Subsystems
+        [[nodiscard]] Ref<VulkanMemoryAllocatorSubsystem> GetMemoryAllocatorSubsystem() const;
+        [[nodiscard]] Ref<VulkanSyncSubsystem>            GetSyncSubsystem()            const;
 
         void WaitDeviceIdle() const;
 
+        // Raw Vulkan handles
         [[nodiscard]] VkInstance       GetVkInstance()               const;
         [[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice()         const;
         [[nodiscard]] VkDevice         GetVkDevice()                 const;

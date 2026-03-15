@@ -6,6 +6,7 @@
 #define ENGINE_ENGINE_H
 
 // Core
+#include "Utility.h"
 #include "Macro.h"
 #include "Layer.h"
 #include "Window.h"
@@ -21,5 +22,6 @@
 #include "Renderer.h"
 #include "RendererAPI.h"
 #include "VulkanRenderer/VulkanRendererAPI.h"
+#include "Image.h"
 
 #endif //ENGINE_ENGINE_H

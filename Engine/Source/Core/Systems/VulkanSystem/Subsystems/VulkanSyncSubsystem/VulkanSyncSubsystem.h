@@ -1,13 +1,10 @@
-//
-// Created by ilya on 10.03.2026.
-//
+#pragma once
 
-#ifndef ENGINE_VULKANSYNCSUBSYSTEM_H
-#define ENGINE_VULKANSYNCSUBSYSTEM_H
+#include "Utility.h"
+#include "VulkanSystem/Subsystems/Subsystem.h"
+#include <vulkan/vulkan.h>
 
-
-class VulkanSyncSubsystem {
-};
+namespace Engine {
 
 
-#endif //ENGINE_VULKANSYNCSUBSYSTEM_H
+} // namespace Engine

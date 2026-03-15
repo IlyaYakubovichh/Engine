@@ -65,3 +65,20 @@ FetchContent_MakeAvailable(
         vma
 )
 target_link_libraries(Engine PUBLIC GPUOpen::VulkanMemoryAllocator)
+
+
+# Finalize
+function(groupper Target)
+    if (TARGET ${Target})
+        set_target_properties(${Target} PROPERTIES FOLDER "EngineDependencies")
+    else()
+        message(WARNING "Target '${Target}' not found, skip grouping")
+    endif()
+endfunction()
+
+
+groupper(spdlog)
+groupper(glfw)
+groupper(vk-bootstrap)
+groupper(glm)
+groupper(VulkanMemoryAllocator)

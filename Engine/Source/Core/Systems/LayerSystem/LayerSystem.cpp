@@ -84,10 +84,10 @@ namespace Engine {
 
     LayerSystem::~LayerSystem() = default;
 
-    void LayerSystem::PushLayer(Layer* layer)          const    { pImpl->PushLayer(layer);     }
-    void LayerSystem::PushOverlay(Layer* overlay)      const    { pImpl->PushOverlay(overlay); }
-    void LayerSystem::PopLayer(const Layer* layer)     const    { pImpl->PopLayer(layer);      }
-    void LayerSystem::PopOverlay(const Layer* overlay) const    { pImpl->PopOverlay(overlay);  }
+	void LayerSystem::PushLayer(Layer* layer)       const { pImpl->PushLayer(layer);     }
+	void LayerSystem::PushOverlay(Layer* overlay)   const { pImpl->PushOverlay(overlay); }
+	void LayerSystem::PopLayer(Layer* layer)        const { pImpl->PopLayer(layer);      }
+	void LayerSystem::PopOverlay(Layer* overlay)    const { pImpl->PopOverlay(overlay);  }
 
     const Layer* LayerSystem::GetLayerByName(const std::string& name) const {
         return pImpl->GetLayerByName(name);

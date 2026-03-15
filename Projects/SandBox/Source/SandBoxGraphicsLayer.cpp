@@ -3,38 +3,35 @@
 
 #include "SandBoxGraphicsLayer.h"
 
-void SandBoxGraphicsLayer::OnAttach() const {
+void SandBoxGraphicsLayer::OnAttach() {
     // Renderer initialize
     Engine::RendererSettings settings;
     settings.rendererAPI = Engine::API::Vulkan;
-    settings.rendererType = Engine::RendererType::Renderer2D;
     Engine::Renderer::Initialize(settings);
 
     // Create render target
-    /*
-     * Engine::ImageSettings imageSettings;
-     * imageSettings.width  = 1280;
-     * imageSettings.height = 720;
-     * imageSettings.format = Engine::ImageFormat::RGBA_8BIT_UNORM;
-     * imageSettings.usage = Engine::ImageUsage::RenderTarget;
-     * mRenderTarget = Engine::Renderer::CreateImage(imageSettings);
-     */
+	Engine::ImageSpec imageSpec;
+	imageSpec.width = 1280;
+	imageSpec.height = 720;
+	imageSpec.format = Engine::ImageFormat::RGBA8_UNORM;
+	imageSpec.usage = Engine::ImageUsage::RenderTarget;
+	mRenderTarget = Engine::Image::Create(imageSpec);
 }
 
-void SandBoxGraphicsLayer::OnDetach() const {
-    // mRenderTarget.reset();
+void SandBoxGraphicsLayer::OnDetach() {
+    mRenderTarget.reset();
     Engine::Renderer::Shutdown();
 }
 
-void SandBoxGraphicsLayer::OnUpdate() const {
+void SandBoxGraphicsLayer::OnUpdate() {
     Engine::Renderer::BeginFrame();
-    Engine::Renderer::BeginRenderPass(/* mRenderTarget */);
+    Engine::Renderer::BeginRenderPass(mRenderTarget);
     Engine::Renderer::Clear(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
     Engine::Renderer::EndRenderPass();
     Engine::Renderer::EndFrame();
     Engine::Renderer::Present();
 }
 
-void SandBoxGraphicsLayer::OnEvent() const {
+void SandBoxGraphicsLayer::OnEvent() {
 
 }

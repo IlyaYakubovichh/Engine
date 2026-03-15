@@ -4,10 +4,11 @@ project(SandBox)
 
 # .h and .cpp files
 file(GLOB_RECURSE Headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
-file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)  
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources})
 
 # .exe target
-add_executable(SandBox ${Sources})
+add_executable(SandBox ${Headers} ${Sources})
 
 # Target properties
 target_compile_definitions(SandBox PRIVATE ENGINE_IMPORTS)                        # macro definition

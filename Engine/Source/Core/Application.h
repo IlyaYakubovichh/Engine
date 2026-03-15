@@ -21,8 +21,8 @@ namespace Engine {
         // Interface over LayerSystem
         void PushLayer(Layer* layer);
         void PushOverlay(Layer* overlay);
-        void PopLayer(const Layer* layer);
-        void PopOverlay(const Layer* overlay);
+        void PopLayer(Layer* layer);
+        void PopOverlay(Layer* overlay);
 
     private:
         void DetachLayers();

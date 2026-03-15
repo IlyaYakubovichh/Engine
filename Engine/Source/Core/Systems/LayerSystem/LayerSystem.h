@@ -13,10 +13,10 @@ namespace Engine {
         friend class Singleton;
 
     public:
-        void PushLayer(Layer* layer)            const;
-        void PushOverlay(Layer* overlay)        const;
-        void PopLayer(const Layer* layer)       const;
-        void PopOverlay(const Layer* overlay)   const;
+		void PushLayer(Layer* layer)      const;
+		void PushOverlay(Layer* overlay)  const;
+        void PopLayer(Layer* layer)       const;
+        void PopOverlay(Layer* overlay)   const;
 
         [[nodiscard]] const Layer* GetLayerByName(const std::string& name) const;
         [[nodiscard]] const std::vector<Layer*>& GetLayers()               const;

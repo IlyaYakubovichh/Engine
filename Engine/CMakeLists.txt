@@ -5,9 +5,10 @@ project(Engine)
 # .h and .cpp files
 file(GLOB_RECURSE Headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources})
 
 # .dll target
-add_library(Engine SHARED ${Sources})
+add_library(Engine SHARED ${Headers} ${Sources})
 
 # Target properties
 target_precompile_headers(Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/EnginePch.h)
@@ -15,7 +16,7 @@ if(WIN32)
     set_target_properties(Engine PROPERTIES PREFIX "" OUTPUT_NAME "Engine")
 endif()
 target_compile_definitions(Engine PRIVATE $<$<CONFIG:Debug>:ENGINE_DEBUG>)
-target_compile_definitions(Engine PRIVATE $<$<CONFIG:Debug>:ENGINE_RELEASE>)
+target_compile_definitions(Engine PRIVATE $<$<CONFIG:Release>:ENGINE_RELEASE>)
 target_compile_definitions(Engine PRIVATE ENGINE_EXPORTS)
 target_include_directories(Engine PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}

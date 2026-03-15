@@ -17,13 +17,13 @@ public:
 
     }
 
-    void OnAttach() const override;
-    void OnDetach() const override;
-    void OnUpdate() const override;
-    void OnEvent() const override;
+	void OnAttach() override;
+	void OnDetach() override;
+    void OnUpdate() override;
+    void OnEvent()  override;
 
 private:
-    // Ref<Engine::Image> mRenderTarget;
+    Engine::Ref<Engine::Image> mRenderTarget;
 };
 
 

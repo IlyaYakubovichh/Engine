@@ -62,14 +62,14 @@ namespace Engine {
         }
     }
 
-    void Application::PopLayer(const Layer* layer) {
+    void Application::PopLayer(Layer* layer) {
         if (layer) {
             layer->OnDetach();
             LayerSystem::GetInstance()->PopLayer(layer);
         }
     }
 
-    void Application::PopOverlay(const Layer* overlay) {
+    void Application::PopOverlay(Layer* overlay) {
         if (overlay) {
             overlay->OnDetach();
             LayerSystem::GetInstance()->PopOverlay(overlay);

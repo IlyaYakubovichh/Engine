@@ -54,7 +54,7 @@
     #define ENGINE_ASSERT_MESSAGE(x, msg)
 #endif
 
-#define LEFT_SHIFT(value) ((value) << 1)
-#define RIGHT_SHIFT(value) ((value) >> 1)
+#define LEFT_SHIFT(value) (1u << (value))
+#define RIGHT_SHIFT(value) (1u >> (value))
 
 #endif //ENGINE_MACRO_H

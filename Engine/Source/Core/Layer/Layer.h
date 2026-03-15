@@ -16,10 +16,10 @@ namespace Engine {
         explicit Layer(std::string  name);
         ~Layer() override;
 
-        virtual void OnAttach() const {}
-        virtual void OnDetach() const {}
-        virtual void OnUpdate() const {}
-        virtual void OnEvent() const {}
+		virtual void OnAttach() {}
+		virtual void OnDetach() {}
+		virtual void OnUpdate() {}
+		virtual void OnEvent() {}
 
         [[nodiscard]] const std::string& GetName() const { return mName; }
 

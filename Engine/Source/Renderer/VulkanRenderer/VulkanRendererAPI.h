@@ -1,5 +1,4 @@
 #pragma once
-
 #include "RendererAPI.h"
 #include "VulkanRendererData.h"
 #include "Macro.h"
@@ -7,24 +6,24 @@
 
 namespace Engine {
 
-    class ENGINE_API VulkanRendererAPI final : public RendererAPI {
-    public:
-        VulkanRendererAPI();
-        ~VulkanRendererAPI() override = default;
+	class ENGINE_API VulkanRendererAPI final : public RendererAPI {
+	public:
+		VulkanRendererAPI();
+		~VulkanRendererAPI() override = default;
 
-        void Initialize() override;
-        void Shutdown()   override;
+		void Initialize() override;
+		void Shutdown()   override;
 
-        void BeginFrame()      override;
-        void EndFrame()        override;
-        void BeginRenderPass() override;
-        void EndRenderPass()   override;
-        void Present()         override;
+		void BeginFrame() override;
+		void EndFrame()   override;
+		void BeginRenderPass(Ref<Image> renderTarget) override;
+		void EndRenderPass()  override;
+		void Present() override;
 
-        void Clear(glm::vec4 clearColor) override;
+		void Clear(glm::vec4 clearColor) override;
 
-    private:
-        VulkanRendererData mData;
-    };
+	private:
+		VulkanRendererData mData;
+	};
 
-} // Engine
+} // namespace Engine

@@ -1,35 +1,35 @@
 #include "Renderer.h"
-#include "LogSystem/LogSystem.h"
+#include "Systems/LogSystem/LogSystem.h"
 
 namespace Engine {
 
-	Ref<RendererAPI> Renderer::sRendererAPI;
-	RendererSettings Renderer::sRendererSettings;
+    Ref<RendererAPI> Renderer::sRendererAPI;
 
-	void Renderer::Initialize(const RendererSettings& settings) {
-		sRendererSettings = settings;
+    void Renderer::Initialize()
+    {
+        sRendererAPI = RendererAPI::Create();
+        if (!sRendererAPI) {
+            ENGINE_LOG_ERROR("Renderer", "Failed to create RendererAPI");
+            return;
+        }
+        sRendererAPI->Initialize();
+    }
 
-		sRendererAPI = RendererAPI::Create(settings.rendererAPI);
-		if (!sRendererAPI) {
-			ENGINE_LOG_ERROR("Renderer", "Renderer::Initialize — failed to create RendererAPI");
-			return;
-		}
+    void Renderer::Shutdown()
+    {
+        // Renderer API
+        {
+            if (sRendererAPI) sRendererAPI->Shutdown();
+            sRendererAPI.reset();
+        }
+    }
 
-		sRendererAPI->Initialize();
-	}
-
-	void Renderer::Shutdown() {
-		if (sRendererAPI)
-			sRendererAPI->Shutdown();
-
-		sRendererAPI.reset();
-	}
-
-	void Renderer::BeginFrame()								{ sRendererAPI->BeginFrame();					}
-	void Renderer::EndFrame()								{ sRendererAPI->EndFrame();						}
-	void Renderer::BeginRenderPass(Ref<Image> renderTarget) { sRendererAPI->BeginRenderPass(renderTarget);  }
-	void Renderer::EndRenderPass()							{ sRendererAPI->EndRenderPass();				}
-	void Renderer::Present()								{ sRendererAPI->Present();						}
-	void Renderer::Clear(glm::vec4 clearColor)				{ sRendererAPI->Clear(clearColor);				}
+    void Renderer::BeginFrame()                         { sRendererAPI->BeginFrame();               }
+    void Renderer::EndFrame()                           { sRendererAPI->EndFrame();                 }
+    void Renderer::BeginRenderPass()                    { sRendererAPI->BeginRenderPass();          }
+    void Renderer::EndRenderPass()                      { sRendererAPI->EndRenderPass();            }
+    void Renderer::Present()                            { sRendererAPI->Present();                  }
+    void Renderer::SetRenderTarget(Ref<Image> target)   { sRendererAPI->SetRenderTarget(target);    }
+    void Renderer::Clear(glm::vec4 clearColor)          { sRendererAPI->Clear(clearColor);          }
 
 } // namespace Engine

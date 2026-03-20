@@ -1,38 +1,46 @@
 #pragma once
+#include "Macros.h"
+#include "Utils.h"
 #include "RendererAPI.h"
 #include "Image.h"
-#include "Macro.h"
-#include "Utility.h"
 #include <glm/glm.hpp>
 
 namespace Engine {
 
-	struct RendererSettings {
-		API rendererAPI{ API::None };
-	};
+    /**
+     * @brief Static facade over the active RendererAPI.
+     *
+     * All rendering calls go through here. The active backend is
+     * created in Initialize() and released in Shutdown().
+     *
+     * TODO (multi-window): extend BeginFrame / Present to accept a window ID
+     * so each window's swapchain can be driven independently.
+     */
+    class ENGINE_API Renderer final {
+    public:
+        Renderer() = delete;
+        ~Renderer() = delete;
 
-	class ENGINE_API Renderer final {
-	public:
-		static void Initialize(const RendererSettings& settings);
-		static void Shutdown();
+        static void Initialize();
+        static void Shutdown();
 
-		static void BeginFrame();
-		static void EndFrame();
-		static void BeginRenderPass(Ref<Image> renderTarget);
-		static void EndRenderPass();
-		static void Present();
+        static void BeginFrame();
+        static void EndFrame();
+        static void BeginRenderPass();
+        static void EndRenderPass();
 
-		static void Clear(glm::vec4 clearColor);
+        // Presents the current frame to the active window.
+        // TODO (multi-window): add windowId parameter to target a specific swapchain.
+        static void Present();
 
-		[[nodiscard]] static const API& GetAPI() { return sRendererAPI->GetAPI(); }
-		[[nodiscard]] static const RendererSettings& GetRendererSettings() { return sRendererSettings; }
+        // Sets the image that subsequent draw calls will render into.
+        // TODO (multi-window): call once per window with its own render target.
+        static void SetRenderTarget(Ref<Image> target);
 
-	private:
-		Renderer() = default;
-		~Renderer() = default;
+        static void Clear(glm::vec4 clearColor);
 
-		static Ref<RendererAPI>  sRendererAPI;
-		static RendererSettings  sRendererSettings;
-	};
+    private:
+        static Ref<RendererAPI> sRendererAPI;
+    };
 
 } // namespace Engine

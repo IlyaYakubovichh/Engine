@@ -1,27 +1,21 @@
-//
-// Created by ilya on 26.02.2026.
-//
+﻿#pragma once
 
-#ifndef ENGINE_ENGINE_H
-#define ENGINE_ENGINE_H
+// ─── Core ─────────────────────────────────────────────────────────────────────
+#include "Source/Core/Utils.h"
+#include "Source/Core/Macros.h"
+#include "Source/Core/Layer.h"
+#include "Source/Core/Window.h"
+#include "Source/Core/Application.h"
 
-// Core
-#include "Utility.h"
-#include "Macro.h"
-#include "Layer.h"
-#include "Window.h"
-#include "Application.h"
+// ─── Systems ──────────────────────────────────────────────────────────────────
+#include "Source/Core/Systems/LayerSystem/LayerSystem.h"
+#include "Source/Core/Systems/LogSystem/LogSystem.h"
+#include "Source/Core/Systems/WindowSystem/WindowSystem.h"
+#include "Source/Core/Systems/VulkanSystem/VulkanSystem.h"
 
-// Systems
-#include "Systems/LayerSystem/LayerSystem.h"
-#include "Systems/LogSystem/LogSystem.h"
-#include "Systems/WindowSystem/WindowSystem.h"
-#include "Systems/VulkanSystem/VulkanSystem.h"
-
-// Renderer
-#include "Renderer.h"
-#include "RendererAPI.h"
-#include "VulkanRenderer/VulkanRendererAPI.h"
-#include "Image.h"
-
-#endif //ENGINE_ENGINE_H
+// ─── Renderer ─────────────────────────────────────────────────────────────────
+#include "Source/Renderer/Image.h"
+#include "Source/Renderer/RendererAPI.h"
+#include "Source/Renderer/Renderer.h"
+#include "Source/Renderer/Vulkan/VulkanImage.h"
+#include "Source/Renderer/Vulkan/VulkanRendererAPI.h"

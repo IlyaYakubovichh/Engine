@@ -1,38 +1,38 @@
 #pragma once
-#include "Utility.h"
-#include "Macro.h"
+#include "Macros.h"
+#include "Utils.h"
 #include "Image.h"
 #include <glm/glm.hpp>
 
 namespace Engine {
 
-	enum class API : uint8_t {
-		None = LEFT_SHIFT(0),
-		Vulkan = LEFT_SHIFT(1),
-	};
+    /**
+     * @brief Abstract rendering backend interface.
+     *
+     * One concrete implementation exists per backend (e.g. VulkanRendererAPI).
+     * Created via RendererAPI::Create().
+     */
+    class ENGINE_API RendererAPI {
+    public:
+        virtual ~RendererAPI() = default;
 
-	class ENGINE_API RendererAPI {
-	public:
-		static Ref<RendererAPI> Create(API api);
+        virtual void Initialize()       = 0;
+        virtual void Shutdown()         = 0;
 
-		virtual void Initialize() = 0;
-		virtual void Shutdown() = 0;
+        virtual void BeginFrame()       = 0;
+        virtual void EndFrame()         = 0;
+        virtual void BeginRenderPass()  = 0;
+        virtual void EndRenderPass()    = 0;
+        virtual void Present()          = 0;
 
-		virtual void BeginFrame() = 0;
-		virtual void EndFrame() = 0;
-		virtual void BeginRenderPass(Ref<Image> renderTarget) = 0;
-		virtual void EndRenderPass() = 0;
-		virtual void Present() = 0;
+        virtual void SetRenderTarget(Ref<Image> target) = 0;
+        virtual void Clear(glm::vec4 clearColor)        = 0;
 
-		virtual void Clear(glm::vec4 clearColor) = 0;
+        // Creates the active backend API instance.
+        [[nodiscard]] static Ref<RendererAPI> Create();
 
-		[[nodiscard]] const API& GetAPI() const { return mAPI; }
-
-	protected:
-		RendererAPI() = default;
-		virtual ~RendererAPI() = default;
-
-		API mAPI{ API::None };
-	};
+    protected:
+        RendererAPI() = default;
+    };
 
 } // namespace Engine

@@ -1,44 +1,46 @@
-//
-// Created by ilya on 27.02.2026.
-//
+#pragma once
 
-#ifndef ENGINE_SINGLETON_H
-#define ENGINE_SINGLETON_H
-
-#include "Macro.h"
-#include "Utility.h"
+#include "Utils.h"
 
 namespace Engine {
 
-    // Singleton (class with ONLY one instance)
+    /**
+     * @brief CRTP-ready singleton base.
+     *
+     * Provides a single globally accessible instance of T.
+     * Start() allocates, Shutdown() deallocates. Not thread-safe by design —
+     * all systems are initialised sequentially from Application::Start().
+     *
+     * @tparam T Concrete system type that inherits Singleton<T>.
+     */
     template<typename T>
-    class ENGINE_API Singleton : public NonCopyable {
+    class Singleton : public NonCopyable {
     public:
-        // Creates an instance if not present
+        // Constructs the instance. No-op if already alive.
         template<typename... Args>
-        static void Start(Args... args) {
+        static void Start(Args&&... args)
+        {
             if (!sInstance) {
-                sInstance = new T(args...);
+                sInstance = new T(std::forward<Args>(args)...);
             }
         }
 
-        // If called on nullptr, then this method has no effect
-        static void Shutdown() {
+        // Destroys the instance. No-op if already null.
+        static void Shutdown()
+        {
             delete sInstance;
+            sInstance = nullptr;
         }
 
-        // Get an instance
-        static T* GetInstance() {
-            return sInstance;
-        }
+        // Returns a raw pointer to the live instance.
+        [[nodiscard]] static T* GetInstance() { return sInstance; }
 
     protected:
         Singleton() = default;
         ~Singleton() = default;
 
-        inline static T* sInstance = nullptr; // C++17 inline static variable
+    private:
+        inline static T* sInstance = nullptr;
     };
 
-}
-
-#endif //ENGINE_SINGLETON_H
+} // namespace Engine

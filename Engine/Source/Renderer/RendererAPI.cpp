@@ -1,17 +1,11 @@
 #include "RendererAPI.h"
-#include "VulkanRenderer/VulkanRendererAPI.h"
-#include "LogSystem/LogSystem.h"
+#include "Vulkan/VulkanRendererAPI.h"
 
 namespace Engine {
 
-    Ref<RendererAPI> RendererAPI::Create(const API api) {
-        switch (api) {
-            case API::Vulkan: return std::make_shared<VulkanRendererAPI>();
-            case API::None:
-            default:
-                ENGINE_LOG_ERROR("RendererAPI", "RendererAPI::Create — unknown or None API requested");
-                return nullptr;
-        }
+    Ref<RendererAPI> RendererAPI::Create()
+    {
+        return std::make_shared<VulkanRendererAPI>();
     }
 
-} // Engine
+} // namespace Engine

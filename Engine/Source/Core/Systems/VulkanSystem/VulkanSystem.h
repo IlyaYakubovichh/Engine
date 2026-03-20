@@ -1,33 +1,46 @@
-#ifndef ENGINE_VULKANSYSTEM_H
-#define ENGINE_VULKANSYSTEM_H
+﻿#pragma once
 
-#include "Macro.h"
+#include "Macros.h"
 #include "Singleton.h"
+#include "Utils.h"
 #include "Window.h"
-#include "VulkanSystem/VulkanWindowContext.h"
-#include "VulkanSystem/Subsystems/VulkanMemoryAllocatorSubsystem/VulkanMemoryAllocatorSubsystem.h"
-#include "VulkanSystem/Subsystems/VulkanSyncSubsystem/VulkanSyncSubsystem.h"
+#include "VulkanWindowContext.h"
+#include "Subsystems/VulkanMemAllocSubsystem.h"
+#include "Subsystems/VulkanSyncSubsystem.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 
 namespace Engine {
 
+    /**
+     * @brief Core Vulkan system.
+     *
+     * Owns the VkInstance, physical/logical device, queues, per-window
+     * surface + swapchain contexts, and all Vulkan subsystems.
+     * Initialised once from Application::Start().
+     */
     class ENGINE_API VulkanSystem final : public Singleton<VulkanSystem> {
         friend class Singleton;
-
     public:
-        // Window contexts
-        void CreateVulkanWindowContext(uint32_t windowId, const std::shared_ptr<Window>& window) const;
+        // ── Window contexts ───────────────────────────────────────────────────────
+
+        // Creates a Vulkan surface and swapchain for the given window.
+        void CreateVulkanWindowContext(uint32_t windowId, const Ref<Window>& window) const;
+
+        // Destroys the surface and swapchain for the given window.
         void DestroyVulkanWindowContext(uint32_t windowId) const;
+
+        // Returns the Vulkan context (surface + swapchain) for the given window.
         [[nodiscard]] const VulkanWindowContext& GetWindowContext(uint32_t windowId) const;
 
-        // Subsystems
-        [[nodiscard]] Ref<VulkanMemoryAllocatorSubsystem> GetMemoryAllocatorSubsystem() const;
-        [[nodiscard]] Ref<VulkanSyncSubsystem>            GetSyncSubsystem()            const;
+        // ── Subsystems ────────────────────────────────────────────────────────────
+        [[nodiscard]] Ref<VulkanMemAllocSubsystem> GetMemAllocSubsystem() const;
+        [[nodiscard]] Ref<VulkanSyncSubsystem>     GetSyncSubsystem()     const;
 
+        // ── Device utilities ──────────────────────────────────────────────────────
         void WaitDeviceIdle() const;
 
-        // Raw Vulkan handles
+        // ── Raw Vulkan handles ────────────────────────────────────────────────────
         [[nodiscard]] VkInstance       GetVkInstance()               const;
         [[nodiscard]] VkPhysicalDevice GetVkPhysicalDevice()         const;
         [[nodiscard]] VkDevice         GetVkDevice()                 const;
@@ -45,9 +58,7 @@ namespace Engine {
         ~VulkanSystem() override;
 
         class Impl;
-        std::unique_ptr<Impl> pImpl;
+        Scope<Impl> pImpl;
     };
 
 } // namespace Engine
-
-#endif // ENGINE_VULKANSYSTEM_H

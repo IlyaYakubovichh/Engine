@@ -1,22 +1,21 @@
 cmake_minimum_required(VERSION 4.0 FATAL_ERROR)
-
 project(SandBox)
 
-# .h and .cpp files
+# ─── Sources ──────────────────────────────────────────────────────────────────
 file(GLOB_RECURSE Headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
-file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)  
+file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources})
 
-# .exe target
+# ─── Target ───────────────────────────────────────────────────────────────────
 add_executable(SandBox ${Headers} ${Sources})
 
-# Target properties
-target_compile_definitions(SandBox PRIVATE ENGINE_IMPORTS)                        # macro definition
-target_link_libraries(SandBox PRIVATE Engine)                                     # linking Engine
-target_include_directories(SandBox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)    # include directories
+target_link_libraries(SandBox PRIVATE Engine)
+target_include_directories(SandBox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
-# Commands
-add_custom_command(TARGET SandBox PRE_BUILD                                       # copy .dll into .exe dir
-        COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:SandBox> $<TARGET_FILE:Engine>
-        COMMAND_EXPAND_LISTS
+# ─── Post-build: copy Engine.dll next to SandBox.exe ──────────────────────────
+add_custom_command(TARGET SandBox POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:Engine>
+        $<TARGET_FILE_DIR:SandBox>
+    COMMENT "Copying Engine.dll to output directory"
 )

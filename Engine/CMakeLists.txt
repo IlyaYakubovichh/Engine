@@ -1,32 +1,35 @@
 cmake_minimum_required(VERSION 4.0 FATAL_ERROR)
-
 project(Engine)
 
-# .h and .cpp files
+# ─── Sources ──────────────────────────────────────────────────────────────────
 file(GLOB_RECURSE Headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources})
 
-# .dll target
+# ─── Target ───────────────────────────────────────────────────────────────────
 add_library(Engine SHARED ${Headers} ${Sources})
+target_precompile_headers(Engine PRIVATE Pch.h)
 
-# Target properties
-target_precompile_headers(Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/EnginePch.h)
+# Strip default "lib" prefix on Windows
 if(WIN32)
     set_target_properties(Engine PROPERTIES PREFIX "" OUTPUT_NAME "Engine")
 endif()
-target_compile_definitions(Engine PRIVATE $<$<CONFIG:Debug>:ENGINE_DEBUG>)
-target_compile_definitions(Engine PRIVATE $<$<CONFIG:Release>:ENGINE_RELEASE>)
-target_compile_definitions(Engine PRIVATE ENGINE_EXPORTS)
-target_include_directories(Engine PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/Layer
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/Systems
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/Window
-        ${CMAKE_CURRENT_SOURCE_DIR}/Source/Renderer
+
+# ─── Definitions ──────────────────────────────────────────────────────────────
+target_compile_definitions(Engine PRIVATE
+    ENGINE_EXPORTS
+    $<$<CONFIG:Debug>:ENGINE_DEBUG>
+    $<$<CONFIG:Release>:ENGINE_RELEASE>
 )
 
-# Engine dependencies setup
-include(EngineDependencies.cmake)
+# ─── Include directories ──────────────────────────────────────────────────────
+target_include_directories(Engine PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/Systems
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Renderer
+)
+
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+include(Dependencies.cmake)

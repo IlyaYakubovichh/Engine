@@ -1,25 +1,20 @@
-#include "Image.h"		 
-#include "VulkanRenderer/VulkanImage.h"
+#include "Image.h"
+#include "Vulkan/VulkanImage.h"
 
 namespace Engine {
 
-	bool Image::IsDepthFormat() const {
-		return GetFormat() == ImageFormat::D32_SFLOAT ||
-			   GetFormat() == ImageFormat::D24_UNORM_S8_UINT;
-	}
+    bool Image::IsDepthFormat() const
+    {
+        return GetFormat() == ImageFormat::D32_Sfloat ||
+            GetFormat() == ImageFormat::D24_Unorm_S8_Uint;
+    }
 
-	bool Image::IsColorFormat() const {
-		return !IsDepthFormat();
-	}
+    bool Image::IsColorFormat()  const { return !IsDepthFormat(); }
+    bool Image::IsRenderTarget() const { return HasFlag(GetUsage(), ImageUsage::RenderTarget); }
 
-	bool Image::IsRenderTarget() const {
-		return HasFlag(GetUsage(), ImageUsage::RenderTarget);
-	}
-
-	Ref<Image> Image::Create(const ImageSpec& spec) {
-		auto image = std::make_shared<VulkanImage>();
-		image->Initialize(spec);
-		return image;
-	}
+    Ref<Image> Image::Create(const ImageSpec& spec)
+    {
+        return std::make_shared<VulkanImage>(spec);
+    }
 
 } // namespace Engine

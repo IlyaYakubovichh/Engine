@@ -1,4 +1,4 @@
-#include "Application.h"
+﻿#include "Application.h"
 #include "Systems/LogSystem/LogSystem.h"
 #include "Systems/LayerSystem/LayerSystem.h"
 #include "Systems/WindowSystem/WindowSystem.h"
@@ -6,81 +6,119 @@
 
 namespace Engine {
 
-    void Application::Start() {
-        LogSystem::Start();    ENGINE_LOG_INFO("Engine", "LogSystem ON!");
-        LayerSystem::Start();  ENGINE_LOG_INFO("Engine", "LayerSystem ON!");
+    // ─── Private helpers ──────────────────────────────────────────────────────────
 
-        WindowSystem::Start(); ENGINE_LOG_INFO("Engine", "WindowSystem ON!");
-        auto [id, window] = WindowSystem::GetInstance()->CreateWindow({ 100, 100, 800, 600, "Main Window" });
+    /** Starts a single system and logs its name. */
+    template<typename TSystem>
+    static void startSystem(const char* name)
+    {
+        TSystem::Start();
+        ENGINE_LOG_INFO("Engine", "{} ON", name);
+    }
 
-        VulkanSystem::Start(); ENGINE_LOG_INFO("Engine", "VulkanSystem ON!");
+    /** Shuts down a single system and logs its name. */
+    template<typename TSystem>
+    static void shutdownSystem(const char* name)
+    {
+        ENGINE_LOG_INFO("Engine", "{} OFF", name);
+        TSystem::Shutdown();
+    }
+
+    /** Calls OnUpdate() on every active layer. */
+    static void updateLayers(LayerSystem* layerSystem)
+    {
+        for (const auto& layer : layerSystem->GetLayers()) {
+            if (layer) layer->OnUpdate();
+        }
+    }
+
+    // ─── Lifecycle ────────────────────────────────────────────────────────────────
+
+    void Application::Start()
+    {
+        startSystem<LogSystem>("LogSystem");
+        startSystem<LayerSystem>("LayerSystem");
+        startSystem<WindowSystem>("WindowSystem");
+
+        auto [id, window] = WindowSystem::GetInstance()->CreateWindow({
+            .xpos = 100,
+            .ypos = 100,
+            .width = 800,
+            .height = 600,
+            .title = "Main Window"
+            });
+
+        startSystem<VulkanSystem>("VulkanSystem");
         VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
     }
 
-    std::pair<uint32_t, std::shared_ptr<Window>> Application::CreateWindow(const WindowSettings& settings) {
-        auto [id, window] = WindowSystem::GetInstance()->CreateWindow(settings);
-        if (window) {
-            VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
-        }
-        return { id, window };
-    }
-
-    void Application::Run() {
-        const auto& windowSystem = WindowSystem::GetInstance();
-        const auto& layerSystem  = LayerSystem::GetInstance();
+    void Application::Run()
+    {
+        auto* windowSystem = WindowSystem::GetInstance();
+        auto* layerSystem = LayerSystem::GetInstance();
 
         while (!windowSystem->AreAllWindowsClosed()) {
-            for (const auto& layer : layerSystem->GetLayers()) {
-                if (layer) {
-                    layer->OnUpdate();
-                }
-            }
+            updateLayers(layerSystem);
             windowSystem->OnUpdate();
         }
     }
 
-    void Application::Shutdown() {
+    void Application::Shutdown()
+    {
         DetachLayers();
-
-        ENGINE_LOG_INFO("Engine", "VulkanSystem OFF!");  VulkanSystem::Shutdown();
-        ENGINE_LOG_INFO("Engine", "WindowSystem OFF!");  WindowSystem::Shutdown();
-        ENGINE_LOG_INFO("Engine", "LayerSystem OFF!");   LayerSystem::Shutdown();
-        ENGINE_LOG_INFO("Engine", "LogSystem OFF!");     LogSystem::Shutdown();
+        shutdownSystem<VulkanSystem>("VulkanSystem");
+        shutdownSystem<WindowSystem>("WindowSystem");
+        shutdownSystem<LayerSystem>("LayerSystem");
+        shutdownSystem<LogSystem>("LogSystem");
     }
 
-    void Application::PushLayer(Layer* layer) {
-        if (layer) {
-            layer->OnAttach();
-            LayerSystem::GetInstance()->PushLayer(layer);
+    // ─── Window ───────────────────────────────────────────────────────────────────
+
+    std::pair<uint32_t, Ref<Window>> Application::CreateWindow(const WindowSettings& settings)
+    {
+        auto [id, window] = WindowSystem::GetInstance()->CreateWindow(settings);
+
+        if (window) {
+            VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
         }
+
+        return { id, window };
     }
 
-    void Application::PushOverlay(Layer* overlay) {
-        if (overlay) {
-            overlay->OnAttach();
-            LayerSystem::GetInstance()->PushOverlay(overlay);
-        }
+    // ─── Layer management ─────────────────────────────────────────────────────────
+
+    void Application::PushLayer(Layer* layer)
+    {
+        if (!layer) return;
+        layer->OnAttach();
+        LayerSystem::GetInstance()->PushLayer(layer);
     }
 
-    void Application::PopLayer(Layer* layer) {
-        if (layer) {
-            layer->OnDetach();
-            LayerSystem::GetInstance()->PopLayer(layer);
-        }
+    void Application::PushOverlay(Layer* overlay)
+    {
+        if (!overlay) return;
+        overlay->OnAttach();
+        LayerSystem::GetInstance()->PushOverlay(overlay);
     }
 
-    void Application::PopOverlay(Layer* overlay) {
-        if (overlay) {
-            overlay->OnDetach();
-            LayerSystem::GetInstance()->PopOverlay(overlay);
-        }
+    void Application::PopLayer(Layer* layer)
+    {
+        if (!layer) return;
+        layer->OnDetach();
+        LayerSystem::GetInstance()->PopLayer(layer);
     }
 
-    void Application::DetachLayers() {
-        for (const auto& layerSystem  = LayerSystem::GetInstance(); const auto& layer : layerSystem->GetLayers()) {
-            if (layer) {
-                layer->OnDetach();
-            }
+    void Application::PopOverlay(Layer* overlay)
+    {
+        if (!overlay) return;
+        overlay->OnDetach();
+        LayerSystem::GetInstance()->PopOverlay(overlay);
+    }
+
+    void Application::DetachLayers()
+    {
+        for (const auto& layer : LayerSystem::GetInstance()->GetLayers()) {
+            if (layer) layer->OnDetach();
         }
     }
 

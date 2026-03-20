@@ -1,6 +1,7 @@
-#ifndef ENGINE_LAYERSYSTEM_H
-#define ENGINE_LAYERSYSTEM_H
+#pragma once
 
+#include "Utils.h"
+#include "Macros.h"
 #include "Layer.h"
 #include "Singleton.h"
 #include <memory>
@@ -9,27 +10,32 @@
 
 namespace Engine {
 
+    /**
+     * @brief Manages the ordered stack of engine layers and overlays.
+     *
+     * Layers occupy the lower half of the stack (insertion-ordered),
+     * overlays always sit on top.
+     */
     class ENGINE_API LayerSystem final : public Singleton<LayerSystem> {
         friend class Singleton;
-
     public:
-		void PushLayer(Layer* layer)      const;
-		void PushOverlay(Layer* overlay)  const;
-        void PopLayer(Layer* layer)       const;
-        void PopOverlay(Layer* overlay)   const;
+        void PushLayer(Layer* layer);
+        void PushOverlay(Layer* overlay);
+        void PopLayer(Layer* layer);
+        void PopOverlay(Layer* overlay);
 
+        // Returns the first layer matching the given name, or nullptr.
         [[nodiscard]] const Layer* GetLayerByName(const std::string& name) const;
-        [[nodiscard]] const std::vector<Layer*>& GetLayers()               const;
+
+        // Returns the full ordered layer list (layers first, overlays last).
+        [[nodiscard]] const std::vector<Layer*>& GetLayers() const;
 
     private:
         LayerSystem();
         ~LayerSystem() override;
 
-        // PIMPL
         class Impl;
-        std::unique_ptr<Impl> pImpl;
+        Scope<Impl> pImpl;
     };
 
 } // namespace Engine
-
-#endif // ENGINE_LAYERSYSTEM_H

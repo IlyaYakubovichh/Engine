@@ -1,23 +1,20 @@
-//
-// Created by ilya on 06.03.2026.
-//
+#pragma once
 
-#ifndef ENGINE_VULKANWINDOWCONTEXT_H
-#define ENGINE_VULKANWINDOWCONTEXT_H
-
-#include "Macro.h"
-#include "Utility.h"
-#include "VulkanSystem/VulkanSwapchain.h"
-#include <memory>
+#include "Macros.h"
+#include "Utils.h"
+#include "VulkanSwapchain.h"
 #include <vulkan/vulkan.h>
 
 namespace Engine {
 
+    /**
+     * @brief Per-window Vulkan state: surface + swapchain.
+     *
+     * Owned by VulkanSystem and keyed by the WindowSystem window ID.
+     */
     struct ENGINE_API VulkanWindowContext {
-        VkSurfaceKHR         surface   { VK_NULL_HANDLE };
+        VkSurfaceKHR         surface{ VK_NULL_HANDLE };
         Ref<VulkanSwapchain> swapchain;
     };
 
-}
-
-#endif //ENGINE_VULKANWINDOWCONTEXT_H
+} // namespace Engine

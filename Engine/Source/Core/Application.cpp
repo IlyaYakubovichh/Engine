@@ -39,17 +39,7 @@ namespace Engine {
         startSystem<LogSystem>("LogSystem");
         startSystem<LayerSystem>("LayerSystem");
         startSystem<WindowSystem>("WindowSystem");
-
-        auto [id, window] = WindowSystem::GetInstance()->CreateWindow({
-            .xpos = 100,
-            .ypos = 100,
-            .width = 800,
-            .height = 600,
-            .title = "Main Window"
-            });
-
         startSystem<VulkanSystem>("VulkanSystem");
-        VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
     }
 
     void Application::Run()

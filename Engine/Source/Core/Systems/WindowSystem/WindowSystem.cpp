@@ -19,8 +19,6 @@ namespace Engine {
             }
 
             glfwSetErrorCallback(OnGlfwError);
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-            glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // TODO: support resize
 
             mInitialized = true;
             ENGINE_LOG_DEBUG("WindowSystem", "GLFW initialized");
@@ -54,6 +52,10 @@ namespace Engine {
                 return { 0, nullptr };
             }
 
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+            glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // TODO: support resize
+            glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+
             auto window = std::make_shared<Window>(settings);
             if (!window->IsValid()) {
                 ENGINE_LOG_WARN("WindowSystem", "CreateWindow: GLFWwindow creation failed");
@@ -63,7 +65,8 @@ namespace Engine {
             const uint32_t id = mNextId++;
             mWindows[id] = window;
 
-            ENGINE_LOG_DEBUG("WindowSystem", "Window {} created ({}x{})", id, settings.width, settings.height);
+            ENGINE_LOG_DEBUG("WindowSystem", "Window {} created ({}x{})",
+                id, settings.width, settings.height);
             return { id, window };
         }
 
@@ -107,7 +110,7 @@ namespace Engine {
     private:
         // ── Helpers ──────────────────────────────────────────────────────────────
 
-        // Destroys Vulkan context and removes every window that flagged close.
+        /// Destroys Vulkan context and removes every window that flagged close.
         void PurgeClosedWindows()
         {
             auto* vulkan = VulkanSystem::GetInstance();
@@ -146,9 +149,9 @@ namespace Engine {
         return pImpl->CreateWindow(settings);
     }
 
-    void        WindowSystem::DeleteWindow(uint32_t id)     const { pImpl->DeleteWindow(id);                }
-    void        WindowSystem::OnUpdate()                    const { pImpl->OnUpdate();                      }
-    bool        WindowSystem::AreAllWindowsClosed()         const { return pImpl->AreAllWindowsClosed();    }
-    Ref<Window> WindowSystem::GetWindowById(uint32_t id)    const { return pImpl->GetWindowById(id);        }
+    void        WindowSystem::DeleteWindow(uint32_t id)  const { pImpl->DeleteWindow(id); }
+    void        WindowSystem::OnUpdate()                 const { pImpl->OnUpdate(); }
+    bool        WindowSystem::AreAllWindowsClosed()      const { return pImpl->AreAllWindowsClosed(); }
+    Ref<Window> WindowSystem::GetWindowById(uint32_t id) const { return pImpl->GetWindowById(id); }
 
 } // namespace Engine

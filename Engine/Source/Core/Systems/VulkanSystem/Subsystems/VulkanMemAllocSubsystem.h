@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Macros.h"
 #include "Subsystem.h"
 #include <vulkan/vulkan.h>
@@ -8,9 +7,9 @@
 namespace Engine {
 
     /**
-     * @brief POD handle for a VMA-managed VkImage.
+     * @brief POD handle for a VMA managed VkImage.
      *
-     * Owns no lifetime — FreeImage() must be called explicitly
+     * Owns no lifetime, FreeImage() must be called explicitly
      * before the allocator is destroyed.
      */
     struct ENGINE_API VulkanImageAllocation {
@@ -21,7 +20,7 @@ namespace Engine {
         [[nodiscard]] bool IsValid() const { return image != VK_NULL_HANDLE; }
     };
 
-    // All inputs required to allocate a VkImage through VMA.
+    /// All inputs required to allocate a VkImage through VMA.
     struct ENGINE_API VulkanImageSpec {
         VkImageCreateInfo        imageInfo{};
         VmaMemoryUsage           memoryUsage{ VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE };
@@ -36,10 +35,13 @@ namespace Engine {
      */
     class ENGINE_API VulkanMemAllocSubsystem final : public VulkanSubsystem {
     public:
-        VulkanMemAllocSubsystem() = default;
+        VulkanMemAllocSubsystem(
+            VkInstance       instance,
+            VkPhysicalDevice physicalDevice,
+            VkDevice         device);
+
         ~VulkanMemAllocSubsystem() override = default;
 
-        void Initialize(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device);
         void Destroy() override;
 
         // Allocates a VkImage via VMA. Asserts if not initialized.

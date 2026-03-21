@@ -9,9 +9,6 @@
 
 namespace Engine {
 
-    // Globally accessible ID of the primary window.
-    inline constexpr uint32_t gMainWindowId = 0;
-
     /**
      * @brief Manages GLFW lifecycle and the collection of active windows.
      *

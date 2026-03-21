@@ -1,10 +1,12 @@
 #include "VulkanSystem.h"
-#include "Systems/WindowSystem/WindowSystem.h"
 #include "Systems/LogSystem/LogSystem.h"
 #include "VulkanUtils.h"
 #include <VkBootstrap.h>
 #include <GLFW/glfw3.h>
 #include <ranges>
+#include <typeinfo>
+#include <vector>
+#include <unordered_map>
 
 namespace Engine {
 
@@ -15,8 +17,13 @@ namespace Engine {
         Impl()
         {
             InitInstance();
-            InitMainSurface();
-            InitDevice();
+
+            // Temporary surface — used only for physical device selection.
+            VkSurfaceKHR initSurface = InitSurface();
+            InitDevice(initSurface);
+            vkDestroySurfaceKHR(mInstance, initSurface, nullptr);
+            ENGINE_LOG_DEBUG("VulkanSystem", "Init surface destroyed");
+
             InitSubsystems();
         }
 
@@ -56,7 +63,6 @@ namespace Engine {
 
             // TODO (multi-window): allocate per-window render target (color + depth image)
             // so each window gets its own draw surface for off-screen rendering.
-            // Example:
             //   mRenderTargets[windowId] = CreateRenderTarget(width, height);
         }
 
@@ -89,20 +95,27 @@ namespace Engine {
 
         // ── Subsystem accessors ───────────────────────────────────────────────────
 
-        [[nodiscard]] Ref<VulkanMemAllocSubsystem> GetMemAllocSubsystem() const { return mMemAllocSubsystem; }
-        [[nodiscard]] Ref<VulkanSyncSubsystem>     GetSyncSubsystem()     const { return mSyncSubsystem; }
+        [[nodiscard]] Ref<VulkanMemAllocSubsystem> GetMemAllocSubsystem() const
+        {
+            return GetSubsystem<VulkanMemAllocSubsystem>();
+        }
+
+        [[nodiscard]] Ref<VulkanSyncSubsystem> GetSyncSubsystem() const
+        {
+            return GetSubsystem<VulkanSyncSubsystem>();
+        }
 
         // ── Device / queue accessors ──────────────────────────────────────────────
 
         void WaitDeviceIdle() const { vkDeviceWaitIdle(mDevice); }
 
-        [[nodiscard]] VkInstance       GetInstance()               const { return mInstance; }
-        [[nodiscard]] VkPhysicalDevice GetPhysicalDevice()         const { return mPhysicalDevice; }
-        [[nodiscard]] VkDevice         GetDevice()                 const { return mDevice; }
-        [[nodiscard]] VkQueue          GetGraphicsQueue()          const { return mGraphicsQueue; }
-        [[nodiscard]] uint32_t         GetGraphicsQueueIndex()     const { return mGraphicsQueueIndex; }
-        [[nodiscard]] VkQueue          GetPresentationQueue()      const { return mPresentationQueue; }
-        [[nodiscard]] uint32_t         GetPresentationQueueIndex() const { return mPresentationQueueIndex; }
+        [[nodiscard]] VkInstance       GetInstance()               const { return mInstance;                }
+        [[nodiscard]] VkPhysicalDevice GetPhysicalDevice()         const { return mPhysicalDevice;          }
+        [[nodiscard]] VkDevice         GetDevice()                 const { return mDevice;                  }
+        [[nodiscard]] VkQueue          GetGraphicsQueue()          const { return mGraphicsQueue;           }
+        [[nodiscard]] uint32_t         GetGraphicsQueueIndex()     const { return mGraphicsQueueIndex;      }
+        [[nodiscard]] VkQueue          GetPresentationQueue()      const { return mPresentationQueue;       }
+        [[nodiscard]] uint32_t         GetPresentationQueueIndex() const { return mPresentationQueueIndex;  }
 
 #ifdef ENGINE_DEBUG
         [[nodiscard]] VkDebugUtilsMessengerEXT GetDebugMessenger() const { return mDebugMessenger; }
@@ -124,10 +137,10 @@ namespace Engine {
             }
         }
 
-        // Shuts down all subsystems in reverse initialisation order.
+        // Shuts down all subsystems in reverse registration order.
         void ShutdownSubsystems()
         {
-            for (auto& subsystem : std::ranges::reverse_view(mSubsystems)) {
+            for (auto& [name, subsystem] : std::ranges::reverse_view(mSubsystems)) {
                 subsystem->Destroy();
             }
             mSubsystems.clear();
@@ -155,12 +168,24 @@ namespace Engine {
 
         // ── Subsystem registration ────────────────────────────────────────────────
 
-        // Registers a subsystem for ordered shutdown and returns it for storage.
+        // Registers a subsystem by its type name and returns it.
         template<std::derived_from<VulkanSubsystem> T>
         Ref<T> AddSubsystem(Ref<T> subsystem)
         {
-            mSubsystems.push_back(subsystem);
+            mSubsystems.emplace_back(typeid(T).name(), subsystem);
             return subsystem;
+        }
+
+        // Returns a subsystem by type. Asserts if not found.
+        template<std::derived_from<VulkanSubsystem> T>
+        [[nodiscard]] Ref<T> GetSubsystem() const
+        {
+            const std::string_view key = typeid(T).name();
+            for (const auto& [name, subsystem] : mSubsystems) {
+                if (name == key) return std::static_pointer_cast<T>(subsystem);
+            }
+            ENGINE_ASSERT_MSG(false, "VulkanSystem: subsystem not found");
+            return nullptr;
         }
 
         // ── Initialisation helpers ────────────────────────────────────────────────
@@ -195,22 +220,26 @@ namespace Engine {
             ENGINE_LOG_DEBUG("VulkanSystem", "Instance created");
         }
 
-        void InitMainSurface()
+        // Creates a temporary 1x1 hidden window, extracts a VkSurfaceKHR,
+        // then immediately destroys the window.
+        [[nodiscard]] VkSurfaceKHR InitSurface()
         {
-            const auto window = WindowSystem::GetInstance()->GetWindowById(gMainWindowId);
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-            VulkanWindowContext ctx;
-            VK_CHECK(glfwCreateWindowSurface(
-                mInstance,
-                window->GetRawGLFW(),
-                nullptr,
-                &ctx.surface));
+            GLFWwindow* tempWindow = glfwCreateWindow(1, 1, "", nullptr, nullptr);
+            ENGINE_ASSERT_MSG(tempWindow != nullptr, "VulkanSystem: failed to create init window");
 
-            ENGINE_LOG_DEBUG("VulkanSystem", "Main surface created (window {})", gMainWindowId);
-            mWindowContexts.emplace(gMainWindowId, std::move(ctx));
+            VkSurfaceKHR surface = VK_NULL_HANDLE;
+            VK_CHECK(glfwCreateWindowSurface(mInstance, tempWindow, nullptr, &surface));
+
+            glfwDestroyWindow(tempWindow);
+
+            ENGINE_LOG_DEBUG("VulkanSystem", "Init surface created (temp window destroyed)");
+            return surface;
         }
 
-        void InitDevice()
+        void InitDevice(VkSurfaceKHR surface)
         {
             const VkPhysicalDeviceVulkan13Features features13{
                 .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
@@ -224,18 +253,15 @@ namespace Engine {
                 .bufferDeviceAddress = VK_TRUE,
             };
 
-            const VkSurfaceKHR mainSurface = mWindowContexts.at(gMainWindowId).surface;
-
             auto physResult = vkb::PhysicalDeviceSelector{ mVkbInstance }
                 .set_minimum_version(1, 3)
                 .set_required_features_13(features13)
                 .set_required_features_12(features12)
-                .set_surface(mainSurface)
+                .set_surface(surface)
                 .select();
 
             if (!physResult) {
-                ENGINE_LOG_ERROR("VulkanSystem", "Failed to select physical device: {}",
-                    physResult.error().message());
+                ENGINE_LOG_ERROR("VulkanSystem", "Failed to select physical device: {}", physResult.error().message());
                 return;
             }
 
@@ -243,8 +269,7 @@ namespace Engine {
 
             auto devResult = vkb::DeviceBuilder{ physResult.value() }.build();
             if (!devResult) {
-                ENGINE_LOG_ERROR("VulkanSystem", "Failed to create logical device: {}",
-                    devResult.error().message());
+                ENGINE_LOG_ERROR("VulkanSystem", "Failed to create logical device: {}", devResult.error().message());
                 return;
             }
 
@@ -272,11 +297,8 @@ namespace Engine {
 
         void InitSubsystems()
         {
-            auto memAlloc = std::make_shared<VulkanMemAllocSubsystem>();
-            memAlloc->Initialize(mInstance, mPhysicalDevice, mDevice);
-            mMemAllocSubsystem = AddSubsystem(std::move(memAlloc));
-
-            mSyncSubsystem = AddSubsystem(std::make_shared<VulkanSyncSubsystem>());
+            AddSubsystem(std::make_shared<VulkanMemAllocSubsystem>(mInstance, mPhysicalDevice, mDevice));
+            AddSubsystem(std::make_shared<VulkanSyncSubsystem>());
         }
 
         // ── Debug callback ────────────────────────────────────────────────────────
@@ -308,12 +330,12 @@ namespace Engine {
 
         vkb::Instance    mVkbInstance{};
 
-        VkInstance       mInstance{ VK_NULL_HANDLE };
-        VkPhysicalDevice mPhysicalDevice{ VK_NULL_HANDLE };
-        VkDevice         mDevice{ VK_NULL_HANDLE };
-        VkQueue          mGraphicsQueue{ VK_NULL_HANDLE };
-        VkQueue          mPresentationQueue{ VK_NULL_HANDLE };
-        uint32_t         mGraphicsQueueIndex{ 0 };
+        VkInstance       mInstance              { VK_NULL_HANDLE };
+        VkPhysicalDevice mPhysicalDevice        { VK_NULL_HANDLE };
+        VkDevice         mDevice                { VK_NULL_HANDLE };
+        VkQueue          mGraphicsQueue         { VK_NULL_HANDLE };
+        VkQueue          mPresentationQueue     { VK_NULL_HANDLE };
+        uint32_t         mGraphicsQueueIndex    { 0 };
         uint32_t         mPresentationQueueIndex{ 0 };
 
 #ifdef ENGINE_DEBUG
@@ -325,9 +347,8 @@ namespace Engine {
         // TODO (multi-window): add per-window render targets map here.
         // std::unordered_map<uint32_t, VulkanRenderTarget> mRenderTargets;
 
-        std::vector<Ref<VulkanSubsystem>> mSubsystems;
-        Ref<VulkanMemAllocSubsystem>      mMemAllocSubsystem;
-        Ref<VulkanSyncSubsystem>          mSyncSubsystem;
+        // Subsystems in registration order (used for reverse shutdown).
+        std::vector<std::pair<std::string_view, Ref<VulkanSubsystem>>> mSubsystems;
     };
 
     // ─── VulkanSystem shell ───────────────────────────────────────────────────────
@@ -350,9 +371,9 @@ namespace Engine {
         return pImpl->GetWindowContext(windowId);
     }
 
-    Ref<VulkanMemAllocSubsystem> VulkanSystem::GetMemAllocSubsystem()  const { return pImpl->GetMemAllocSubsystem();    }
-    Ref<VulkanSyncSubsystem>     VulkanSystem::GetSyncSubsystem()      const { return pImpl->GetSyncSubsystem();        }
-    void                         VulkanSystem::WaitDeviceIdle()        const { pImpl->WaitDeviceIdle();                 }
+    Ref<VulkanMemAllocSubsystem> VulkanSystem::GetMemAllocSubsystem() const { return pImpl->GetMemAllocSubsystem();     }
+    Ref<VulkanSyncSubsystem>     VulkanSystem::GetSyncSubsystem()     const { return pImpl->GetSyncSubsystem();         }
+    void                         VulkanSystem::WaitDeviceIdle()       const { pImpl->WaitDeviceIdle();                  }
 
     VkInstance       VulkanSystem::GetVkInstance()               const { return pImpl->GetInstance();                   }
     VkPhysicalDevice VulkanSystem::GetVkPhysicalDevice()         const { return pImpl->GetPhysicalDevice();             }

@@ -11,27 +11,25 @@ namespace Engine {
 
     // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
-    void VulkanRendererAPI::Initialize()
+    void VulkanRendererAPI::Initialize(const RendererSettings& settings)
     {
         const auto* vulkan = VulkanSystem::GetInstance();
 
-        mData.device = vulkan->GetVkDevice();
-        mData.graphicsQueue = vulkan->GetVkGraphicsQueue();
-        mData.presentQueue = vulkan->GetVkPresentationQueue();
-        mData.swapchain = vulkan->GetWindowContext(gMainWindowId).swapchain;
+        mData.device            = vulkan->GetVkDevice();
+        mData.graphicsQueue     = vulkan->GetVkGraphicsQueue();
+        mData.presentQueue      = vulkan->GetVkPresentationQueue();
+        mData.swapchain         = vulkan->GetWindowContext(settings.windowId).swapchain;
 
-        ENGINE_ASSERT_MSG(mData.device != VK_NULL_HANDLE, "VulkanRendererAPI: device is null");
-        ENGINE_ASSERT_MSG(mData.graphicsQueue != VK_NULL_HANDLE, "VulkanRendererAPI: graphics queue is null");
-        ENGINE_ASSERT_MSG(mData.swapchain != nullptr, "VulkanRendererAPI: swapchain is null");
-
-        // TODO (multi-window): initialize one mData per window here.
+        ENGINE_ASSERT_MSG(mData.device != VK_NULL_HANDLE,           "VulkanRendererAPI: device is null");
+        ENGINE_ASSERT_MSG(mData.graphicsQueue != VK_NULL_HANDLE,    "VulkanRendererAPI: graphics queue is null");
+        ENGINE_ASSERT_MSG(mData.swapchain != nullptr,               "VulkanRendererAPI: swapchain is null");
 
         const uint32_t queueIndex = vulkan->GetVkGraphicsQueueIndex();
         for (auto& frame : mData.frames) {
             frame.Initialize(mData.device, queueIndex);
         }
 
-        ENGINE_LOG_INFO(LOG_CATEGORY, "Initialized ({} frames in flight)", gMaxFramesInFlight);
+        ENGINE_LOG_INFO(LOG_CATEGORY, "Initialized (window {}, {} frames in flight)", settings.windowId, gMaxFramesInFlight);
     }
 
     void VulkanRendererAPI::Shutdown()

@@ -1,28 +1,31 @@
-#include "Renderer.h"
+﻿#include "Renderer.h"
 #include "Systems/LogSystem/LogSystem.h"
 
 namespace Engine {
 
     Ref<RendererAPI> Renderer::sRendererAPI;
 
-    void Renderer::Initialize()
+    // ─── Lifecycle ────────────────────────────────────────────────────────────────
+
+    void Renderer::Initialize(const RendererSettings& settings)
     {
         sRendererAPI = RendererAPI::Create();
         if (!sRendererAPI) {
             ENGINE_LOG_ERROR("Renderer", "Failed to create RendererAPI");
             return;
         }
-        sRendererAPI->Initialize();
+        sRendererAPI->Initialize(settings);
     }
 
     void Renderer::Shutdown()
     {
-        // Renderer API
-        {
-            if (sRendererAPI) sRendererAPI->Shutdown();
+        if (sRendererAPI) {
+            sRendererAPI->Shutdown();
             sRendererAPI.reset();
         }
     }
+
+    // ─── Frame ────────────────────────────────────────────────────────────────────
 
     void Renderer::BeginFrame()                         { sRendererAPI->BeginFrame();               }
     void Renderer::EndFrame()                           { sRendererAPI->EndFrame();                 }

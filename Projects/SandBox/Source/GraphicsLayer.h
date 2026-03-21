@@ -5,10 +5,17 @@
  * @brief Sample layer that clears the screen each frame.
  *
  * Owns the render target image and drives the Renderer lifecycle.
+ * Tied to a specific window via windowId.
  */
 class GraphicsLayer final : public Engine::Layer {
 public:
-    GraphicsLayer() : Layer("GraphicsLayer") {}
+    GraphicsLayer(uint32_t windowId, Engine::Ref<Engine::Window> window)
+        : Layer("GraphicsLayer")
+        , mWindowId(windowId)
+        , mWindow(std::move(window))
+    {
+    }
+
     ~GraphicsLayer() override = default;
 
     void OnAttach() override;
@@ -17,5 +24,7 @@ public:
     void OnEvent()  override;
 
 private:
-    Engine::Ref<Engine::Image> mRenderTarget;
+    uint32_t                    mWindowId;
+    Engine::Ref<Engine::Window> mWindow;
+    Engine::Ref<Engine::Image>  mRenderTarget;
 };

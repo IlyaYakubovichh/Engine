@@ -2,11 +2,13 @@
 
 void GraphicsLayer::OnAttach()
 {
-    Engine::Renderer::Initialize();
+    Engine::Renderer::Initialize({ .windowId = mWindowId });
+
+    auto [width, height] = mWindow->GetExtent();
 
     mRenderTarget = Engine::Image::Create({
-        .width = 800,
-        .height = 600,
+        .width = static_cast<uint32_t>(width),
+        .height = static_cast<uint32_t>(height),
         .format = Engine::ImageFormat::RGBA8_Unorm,
         .usage = Engine::ImageUsage::RenderTarget,
         });
@@ -23,7 +25,7 @@ void GraphicsLayer::OnUpdate()
 {
     Engine::Renderer::BeginFrame();
     Engine::Renderer::SetRenderTarget(mRenderTarget);
-    Engine::Renderer::Clear({ 0.1f, 0.5f, 0.1f, 1.0f });
+    Engine::Renderer::Clear({ 0.15f, 0.15f, 0.15f, 1.0f });
     Engine::Renderer::BeginRenderPass();
 
     // TODO: draw calls

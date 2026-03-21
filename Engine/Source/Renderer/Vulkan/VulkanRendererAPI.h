@@ -17,7 +17,7 @@ namespace Engine {
      */
     class ENGINE_API VulkanRendererAPI final : public RendererAPI {
     public:
-        void Initialize() override;
+        void Initialize(const RendererSettings& settings) override;
         void Shutdown()   override;
 
         void BeginFrame()      override;
@@ -41,6 +41,8 @@ namespace Engine {
         void TransitionSwapchainToPresent(VkCommandBuffer cmd, VkImage swapchainImage);
         void SubmitFrame();
 
+
+    private:
         VulkanRendererData mData;
     };
 

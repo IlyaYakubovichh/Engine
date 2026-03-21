@@ -10,6 +10,14 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources})
 add_library(Engine SHARED ${Headers} ${Sources})
 target_precompile_headers(Engine PRIVATE Pch.h)
 
+target_compile_options(Engine PUBLIC
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /utf-8
+        /wd4251
+        /wd4275
+    >
+)
+
 # Strip default "lib" prefix on Windows
 if(WIN32)
     set_target_properties(Engine PROPERTIES PREFIX "" OUTPUT_NAME "Engine")

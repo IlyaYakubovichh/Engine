@@ -6,6 +6,11 @@
 
 namespace Engine {
 
+    /// Settings passed to Renderer::Initialize().
+    struct ENGINE_API RendererSettings {
+        uint32_t windowId{ 0 };
+    };
+
     /**
      * @brief Abstract rendering backend interface.
      *
@@ -16,8 +21,8 @@ namespace Engine {
     public:
         virtual ~RendererAPI() = default;
 
-        virtual void Initialize()       = 0;
-        virtual void Shutdown()         = 0;
+        virtual void Initialize(const RendererSettings& settings)   = 0;
+        virtual void Shutdown()                                     = 0;
 
         virtual void BeginFrame()       = 0;
         virtual void EndFrame()         = 0;
@@ -28,7 +33,6 @@ namespace Engine {
         virtual void SetRenderTarget(Ref<Image> target) = 0;
         virtual void Clear(glm::vec4 clearColor)        = 0;
 
-        // Creates the active backend API instance.
         [[nodiscard]] static Ref<RendererAPI> Create();
 
     protected:

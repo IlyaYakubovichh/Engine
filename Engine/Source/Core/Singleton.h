@@ -5,10 +5,10 @@
 namespace Engine {
 
     /**
-     * @brief CRTP-ready singleton base.
+     * @brief CRTP ready singleton base.
      *
      * Provides a single globally accessible instance of T.
-     * Start() allocates, Shutdown() deallocates. Not thread-safe by design —
+     * Start() allocates, Shutdown() deallocates. Not thread-safe by design, 
      * all systems are initialised sequentially from Application::Start().
      *
      * @tparam T Concrete system type that inherits Singleton<T>.
@@ -16,7 +16,7 @@ namespace Engine {
     template<typename T>
     class Singleton : public NonCopyable {
     public:
-        // Constructs the instance. No-op if already alive.
+        // Constructs the instance. No op if already alive.
         template<typename... Args>
         static void Start(Args&&... args)
         {
@@ -25,7 +25,7 @@ namespace Engine {
             }
         }
 
-        // Destroys the instance. No-op if already null.
+        // Destroys the instance. No op if already null.
         static void Shutdown()
         {
             delete sInstance;

@@ -30,7 +30,7 @@
 #define ENGINE_ASSERT_MSG(x, msg)                                                   \
         do {                                                                        \
             if (!(x)) {                                                             \
-                ENGINE_LOG_FATAL("Assert", msg);                                    \
+                ENGINE_LOG_FATAL("Assert", #msg);                                   \
                 ENGINE_DEBUGBREAK();                                                \
             }                                                                       \
         } while (0)

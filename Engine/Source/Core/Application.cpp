@@ -1,8 +1,10 @@
 ﻿#include "Application.h"
 #include "Systems/LogSystem/LogSystem.h"
+#include "Systems/FileSystem/FileSystem.h"
 #include "Systems/LayerSystem/LayerSystem.h"
 #include "Systems/WindowSystem/WindowSystem.h"
 #include "Systems/VulkanSystem/VulkanSystem.h"
+#include "ShaderLibrary.h"
 
 namespace Engine {
 
@@ -40,6 +42,8 @@ namespace Engine {
         startSystem<LayerSystem>("LayerSystem");
         startSystem<WindowSystem>("WindowSystem");
         startSystem<VulkanSystem>("VulkanSystem");
+        startSystem<FileSystem>("FileSystem");
+        startSystem<ShaderLibrary>("ShaderLibrary");
     }
 
     void Application::Run()
@@ -56,6 +60,8 @@ namespace Engine {
     void Application::Shutdown()
     {
         DetachLayers();
+        shutdownSystem<ShaderLibrary>("ShaderLibrary");
+        shutdownSystem<FileSystem>("FileSystem");
         shutdownSystem<VulkanSystem>("VulkanSystem");
         shutdownSystem<WindowSystem>("WindowSystem");
         shutdownSystem<LayerSystem>("LayerSystem");

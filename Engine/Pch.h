@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <functional>
 #include <filesystem>
+#include <fstream>
+#include <sstream>
 
 // Modern C++ utilities
 #include <optional>

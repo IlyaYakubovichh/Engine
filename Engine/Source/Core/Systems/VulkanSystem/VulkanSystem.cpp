@@ -3,10 +3,6 @@
 #include "VulkanUtils.h"
 #include <VkBootstrap.h>
 #include <GLFW/glfw3.h>
-#include <ranges>
-#include <typeinfo>
-#include <vector>
-#include <unordered_map>
 
 namespace Engine {
 
@@ -88,8 +84,7 @@ namespace Engine {
         [[nodiscard]] const VulkanWindowContext& GetWindowContext(uint32_t windowId) const
         {
             const auto it = mWindowContexts.find(windowId);
-            ENGINE_ASSERT_MSG(it != mWindowContexts.end(),
-                "VulkanSystem: no context for given window id");
+            ENGINE_ASSERT_MSG(it != mWindowContexts.end(), "VulkanSystem: no context for given window id");
             return it->second;
         }
 

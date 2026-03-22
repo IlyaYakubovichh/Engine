@@ -1,9 +1,9 @@
-#include "App.h"
-#include "GraphicsLayer.h"
+#include "Core/Application.h"
+#include "Layers/GraphicsLayer.h"
 
 int main()
 {
-    App app;
+    Application app;
     app.Start();
 
     auto [windowId, window] = app.CreateWindow({
@@ -17,5 +17,6 @@ int main()
     app.PushLayer(new GraphicsLayer(windowId, window));
     app.Run();
     app.Shutdown();
+
     return 0;
 }

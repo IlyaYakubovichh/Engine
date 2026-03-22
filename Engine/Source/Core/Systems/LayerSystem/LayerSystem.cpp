@@ -1,8 +1,6 @@
-﻿#include "LayerSystem.h"
-#include "Macros.h"
+﻿#include "Macros.h"
+#include "Systems/LayerSystem/LayerSystem.h"
 #include "Systems/LogSystem/LogSystem.h"
-#include <algorithm>
-#include <ranges>
 
 namespace Engine {
 

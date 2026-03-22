@@ -4,10 +4,15 @@ project(SandBox)
 # ─── Sources ──────────────────────────────────────────────────────────────────
 file(GLOB_RECURSE Headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 file(GLOB_RECURSE Sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources})
+file(GLOB_RECURSE Shaders RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+    *.vert
+    *.frag
+    *.comp
+)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${Headers} ${Sources} ${Shaders})
 
 # ─── Target ───────────────────────────────────────────────────────────────────
-add_executable(SandBox ${Headers} ${Sources})
+add_executable(SandBox ${Headers} ${Sources} ${Shaders})
 
 target_link_libraries(SandBox PRIVATE Engine)
 target_include_directories(SandBox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)

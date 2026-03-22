@@ -1,9 +1,7 @@
-﻿#include "WindowSystem.h"
+﻿#include "Systems/WindowSystem/WindowSystem.h"
 #include "Systems/VulkanSystem/VulkanSystem.h"
 #include "Systems/LogSystem/LogSystem.h"
 #include <GLFW/glfw3.h>
-#include <ranges>
-#include <unordered_map>
 
 namespace Engine {
 

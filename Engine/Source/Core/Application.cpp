@@ -1,16 +1,13 @@
 ﻿#include "Application.h"
-#include "Systems/LogSystem/LogSystem.h"
-#include "Systems/FileSystem/FileSystem.h"
-#include "Systems/LayerSystem/LayerSystem.h"
-#include "Systems/WindowSystem/WindowSystem.h"
-#include "Systems/VulkanSystem/VulkanSystem.h"
-#include "ShaderLibrary.h"
+#include "Log/LogSystem.h"
+#include "File/FileSystem.h"
+#include "Layer/LayerSystem.h"
+#include "Window/WindowSystem.h"
+#include "Vulkan/VulkanSystem.h"
+#include "Shaders/ShaderLibrary.h"
 
 namespace Engine {
 
-    // ─── Private helpers ──────────────────────────────────────────────────────────
-
-    /** Starts a single system and logs its name. */
     template<typename TSystem>
     static void startSystem(const char* name)
     {
@@ -18,7 +15,6 @@ namespace Engine {
         ENGINE_LOG_INFO("Engine", "{} ON", name);
     }
 
-    /** Shuts down a single system and logs its name. */
     template<typename TSystem>
     static void shutdownSystem(const char* name)
     {
@@ -26,15 +22,12 @@ namespace Engine {
         TSystem::Shutdown();
     }
 
-    /** Calls OnUpdate() on every active layer. */
     static void updateLayers(LayerSystem* layerSystem)
     {
         for (const auto& layer : layerSystem->GetLayers()) {
             if (layer) layer->OnUpdate();
         }
     }
-
-    // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
     void Application::Start()
     {
@@ -68,20 +61,16 @@ namespace Engine {
         shutdownSystem<LogSystem>("LogSystem");
     }
 
-    // ─── Window ───────────────────────────────────────────────────────────────────
-
     std::pair<uint32_t, Ref<Window>> Application::CreateWindow(const WindowSettings& settings)
     {
         auto [id, window] = WindowSystem::GetInstance()->CreateWindow(settings);
 
         if (window) {
-            VulkanSystem::GetInstance()->CreateVulkanWindowContext(id, window);
+            VulkanSystem::GetInstance()->CreateSurface(id, window);
         }
 
         return { id, window };
     }
-
-    // ─── Layer management ─────────────────────────────────────────────────────────
 
     void Application::PushLayer(Layer* layer)
     {

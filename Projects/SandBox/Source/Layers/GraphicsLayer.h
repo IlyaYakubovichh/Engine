@@ -1,24 +1,31 @@
 #pragma once
 #include <Engine.h>
 
+struct WindowEntry {
+    uint32_t                    id;
+    Engine::Ref<Engine::Window> window;
+};
+
 class GraphicsLayer final : public Engine::Layer {
 public:
-    GraphicsLayer(uint32_t windowId, Engine::Ref<Engine::Window> window)
-        : Engine::Layer("GraphicsLayer"),
-        mWindowId(windowId),
-        mWindow(std::move(window)) {
+    explicit GraphicsLayer(std::initializer_list<WindowEntry> windows)
+        : Engine::Layer("GraphicsLayer")
+    {
+        mWindows.reserve(windows.size());
+        for (auto& e : windows)
+            mWindows.push_back({ e, nullptr });
     }
 
     void OnAttach() override;
     void OnDetach() override;
     void OnUpdate() override;
-    void OnEvent()  override;
+    void OnEvent()  override {}
 
 private:
-    uint32_t                    mWindowId{};
-    Engine::Ref<Engine::Window> mWindow;
-    Engine::Ref<Engine::Image>  mRenderTarget;
-    Engine::Ref<Engine::Shader> mSkyShader;   
+    struct WindowData {
+        WindowEntry                entry;
+        Engine::Ref<Engine::Image> renderTarget;
+    };
 
-    std::filesystem::path mWd = "../../../Projects/SandBox/Source/Assets";
+    std::vector<WindowData> mWindows;
 };

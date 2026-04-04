@@ -36,11 +36,12 @@ namespace Engine {
         [[nodiscard]] bool IsValid()      const;
         [[nodiscard]] bool ShouldClose()  const;
 
-        void Close() const;
+        void Close();
 
     private:
         GLFWwindow* mWindow{ nullptr };
         WindowSettings mSettings;
+        bool mClosed{ false };
     };
 
 } // namespace Engine

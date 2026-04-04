@@ -1,6 +1,6 @@
 #include "Window.h"
 #include "Macros.h"
-#include "Systems/LogSystem/LogSystem.h"
+#include "Log/LogSystem.h"
 #include <GLFW/glfw3.h>
 
 namespace Engine {
@@ -41,11 +41,20 @@ namespace Engine {
     }
 
     bool Window::IsValid()     const { return mWindow != nullptr; }
-    bool Window::ShouldClose() const { return mWindow && glfwWindowShouldClose(mWindow); }
 
-    void Window::Close() const
+    bool Window::ShouldClose() const
     {
-        if (mWindow) glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+        if (mClosed) return true;
+        return mWindow && glfwWindowShouldClose(mWindow);
+    }
+
+    void Window::Close()
+    {
+        mClosed = true;
+        if (mWindow) {
+            glfwDestroyWindow(mWindow);
+            mWindow = nullptr;
+        }
     }
 
 } // namespace Engine

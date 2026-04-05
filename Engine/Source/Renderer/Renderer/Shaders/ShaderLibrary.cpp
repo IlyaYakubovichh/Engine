@@ -43,4 +43,9 @@ namespace Engine {
         ENGINE_LOG_INFO("ShaderLibrary", "Cleared all shaders");
     }
 
+    ShaderLibrary::~ShaderLibrary()
+    {
+        Clear();
+    }
+
 } // namespace Engine

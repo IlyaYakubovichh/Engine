@@ -23,16 +23,15 @@ namespace Engine {
 
         void Free() override;
 
-        [[nodiscard]] uint32_t    GetWidth()       const override { return mSpec.width;         }
-        [[nodiscard]] uint32_t    GetHeight()      const override { return mSpec.height;        }
-        [[nodiscard]] uint32_t    GetMipLevels()   const override { return mSpec.mipLevels;     }
-        [[nodiscard]] uint32_t    GetArrayLayers() const override { return mSpec.arrayLayers;   }
-        [[nodiscard]] ImageFormat GetFormat()      const override { return mSpec.format;        }
-        [[nodiscard]] ImageUsage  GetUsage()       const override { return mSpec.usage;         }
-
-        [[nodiscard]] VkImage     GetVkImage()     const { return mAllocation.image;        }
-        [[nodiscard]] VkImageView GetVkImageView() const { return mImageView;               }
-        [[nodiscard]] VkFormat    GetVkFormat()    const { return ToVkFormat(mSpec.format); }
+        [[nodiscard]] uint32_t    GetWidth()       const override   { return mSpec.width;               }
+        [[nodiscard]] uint32_t    GetHeight()      const override   { return mSpec.height;              }
+        [[nodiscard]] uint32_t    GetMipLevels()   const override   { return mSpec.mipLevels;           }
+        [[nodiscard]] uint32_t    GetArrayLayers() const override   { return mSpec.arrayLayers;         }
+        [[nodiscard]] ImageFormat GetFormat()      const override   { return mSpec.format;              }
+        [[nodiscard]] ImageUsage  GetUsage()       const override   { return mSpec.usage;               }
+        [[nodiscard]] VkImage     GetVkImage()     const            { return mAllocation.image;         }
+        [[nodiscard]] VkImageView GetVkImageView() const            { return mImageView;                }
+        [[nodiscard]] VkFormat    GetVkFormat()    const            { return ToVkFormat(mSpec.format);  }
 
         [[nodiscard]] VulkanImageSyncState& GetSyncState()              { return mSyncState;  }
         [[nodiscard]] const VulkanImageSyncState& GetSyncState() const  { return mSyncState;  }

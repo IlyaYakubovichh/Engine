@@ -5,6 +5,7 @@
 #include "Window/WindowSystem.h"
 #include "Vulkan/VulkanSystem.h"
 #include "Shaders/ShaderLibrary.h"
+#include "Pipelines/PipelineLibrary.h"
 
 namespace Engine {
 
@@ -37,6 +38,7 @@ namespace Engine {
         startSystem<VulkanSystem>("VulkanSystem");
         startSystem<FileSystem>("FileSystem");
         startSystem<ShaderLibrary>("ShaderLibrary");
+        startSystem<PipelineLibrary>("PipelineLibrary");
     }
 
     void Application::Run()
@@ -53,6 +55,7 @@ namespace Engine {
     void Application::Shutdown()
     {
         DetachLayers();
+        shutdownSystem<PipelineLibrary>("PipelineLibrary");
         shutdownSystem<ShaderLibrary>("ShaderLibrary");
         shutdownSystem<FileSystem>("FileSystem");
         shutdownSystem<VulkanSystem>("VulkanSystem");

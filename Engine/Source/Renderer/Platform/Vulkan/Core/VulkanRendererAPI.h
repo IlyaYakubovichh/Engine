@@ -11,18 +11,22 @@ namespace Engine {
 
     class ENGINE_API VulkanRendererAPI final : public RendererAPI {
     public:
-        void Initialize()                    override;
-        void Shutdown()                      override;
-        void AddWindow(uint32_t windowId)    override;
-        void RemoveWindow(uint32_t windowId) override;
-        void BeginWindow(uint32_t windowId)  override;
-        void EndWindow()                     override;
-        void BeginFrame()                    override;
-        void EndFrame()                      override;
-        void BeginRenderPass()               override;
-        void EndRenderPass()                 override;
-        void SetRenderTarget(Ref<Image> rt)  override;
-        void Clear(glm::vec4 color)          override;
+        void            Initialize()                                                        override;
+        void            Shutdown()                                                          override;
+        void            AddWindow(uint32_t windowId)                                        override;
+        void            RemoveWindow(uint32_t windowId)                                     override;
+        void            BeginWindow(uint32_t windowId)                                      override;
+        void            EndWindow()                                                         override;
+        void            BeginFrame()                                                        override;
+        void            EndFrame()                                                          override;
+        void            BeginRenderPass()                                                   override;
+        void            EndRenderPass()                                                     override;
+        void            SetRenderTarget(Ref<Image> rt)                                      override;
+        void            Clear(glm::vec4 color)                                              override;
+        Ref<Pipeline>   CreateGraphicsPipeline(const GraphicsPipelineSettings& settings)    override;
+        Ref<Pipeline>   CreateComputePipeline(const ComputePipelineSettings& settings)      override;
+        void            BindPipeline(Ref<Pipeline> pipeline)                                override;
+        void            Dispatch(uint32_t x, uint32_t y, uint32_t z)                        override;
 
     private:
         void WaitForFrame(WindowRenderState& ctx);
@@ -35,10 +39,11 @@ namespace Engine {
         void TransitionSwapchainToPresent(VkCommandBuffer cmd, VkImage swapImg);
 
     private:
-        VkDevice mDevice                { VK_NULL_HANDLE };
-        VkQueue  mGraphicsQueue         { VK_NULL_HANDLE };
-        VkQueue  mPresentQueue          { VK_NULL_HANDLE };
-        uint32_t mGraphicsQueueIndex    { 0 };
+        VkDevice        mDevice                { VK_NULL_HANDLE };
+        VkQueue         mGraphicsQueue         { VK_NULL_HANDLE };
+        VkQueue         mPresentQueue          { VK_NULL_HANDLE };
+        uint32_t        mGraphicsQueueIndex    { 0 };
+        Ref<Pipeline>   mBoundPipeline         { nullptr };
 
         std::unordered_map<uint32_t, Scope<WindowRenderState>> mWindows;
         WindowRenderState* mActiveContext{ nullptr };

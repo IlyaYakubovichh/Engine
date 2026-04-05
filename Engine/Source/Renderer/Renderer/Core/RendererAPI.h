@@ -20,18 +20,23 @@ namespace Engine {
         virtual void Initialize() = 0;
         virtual void Shutdown() = 0;
 
-        virtual void AddWindow(uint32_t windowId) = 0;
-        virtual void RemoveWindow(uint32_t windowId) = 0;
-        virtual void BeginWindow(uint32_t windowId) = 0;
-        virtual void EndWindow() = 0;
-        virtual void BeginFrame() = 0;
-        virtual void EndFrame() = 0;
-        virtual void BeginRenderPass() = 0;
-        virtual void EndRenderPass() = 0;
-        virtual void SetRenderTarget(Ref<Image> rt) = 0;
-        virtual void Clear(glm::vec4 color) = 0;
+        virtual void            AddWindow(uint32_t windowId)                                        = 0;
+        virtual void            RemoveWindow(uint32_t windowId)                                     = 0;
+        virtual void            BeginWindow(uint32_t windowId)                                      = 0;
+        virtual void            EndWindow()                                                         = 0;
+        virtual void            BeginFrame()                                                        = 0;
+        virtual void            EndFrame()                                                          = 0;
+        virtual void            BeginRenderPass()                                                   = 0;
+        virtual void            EndRenderPass()                                                     = 0;
+        virtual void            SetRenderTarget(Ref<Image> rt)                                      = 0;
+        virtual void            Clear(glm::vec4 color)                                              = 0;
+        virtual Ref<Pipeline>   CreateGraphicsPipeline(const GraphicsPipelineSettings& settings)    = 0;
+        virtual Ref<Pipeline>   CreateComputePipeline(const ComputePipelineSettings& settings)      = 0;
+        virtual void            BindPipeline(Ref<Pipeline> pipeline)                                = 0;
+        virtual void            Dispatch(uint32_t x, uint32_t y, uint32_t z)                        = 0;
 
-        [[nodiscard]] static Ref<RendererAPI> Create();
+        [[nodiscard]] static Ref<RendererAPI>   Create();
+        [[nodiscard]] static Ref<RendererAPI>&  GetActive();
 
     protected:
         RendererAPI() = default;

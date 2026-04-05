@@ -83,16 +83,21 @@ namespace Engine {
             return {};
         }
 
-        std::ifstream file(path, std::ios::in | std::ios::ate);
+        std::ifstream file(path, std::ios::binary | std::ios::ate);
         if (!file) {
             ENGINE_LOG_ERROR("Filesystem", "Failed to open: {}", path.string());
             return {};
         }
 
-        std::string content;
-        content.resize(file.tellg());
+        const auto size = file.tellg();
+        if (size <= 0) {
+            ENGINE_LOG_ERROR("Filesystem", "File is empty: {}", path.string());
+            return {};
+        }
+
+        std::string content(static_cast<size_t>(size), '\0');
         file.seekg(0, std::ios::beg);
-        file.read(content.data(), content.size());
+        file.read(content.data(), size);
 
         return content;
     }

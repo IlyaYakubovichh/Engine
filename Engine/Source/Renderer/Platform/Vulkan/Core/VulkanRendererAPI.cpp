@@ -3,6 +3,8 @@
 #include "Resources/VulkanImage.h"
 #include "Vulkan/VulkanSystem.h"
 #include "Window/WindowSystem.h"
+#include "Pipelines/VulkanGraphicsPipeline.h"
+#include "Pipelines/VulkanComputePipeline.h"
 #include "Log/LogSystem.h"
 
 namespace Engine {
@@ -141,6 +143,44 @@ namespace Engine {
         mActiveContext          = nullptr;
     }
 
+    void VulkanRendererAPI::BeginRenderPass()
+    {
+        ENGINE_ASSERT_MSG(mActiveContext, "VulkanRendererAPI: BeginRenderPass called outside BeginWindow/EndWindow");
+        ENGINE_ASSERT_MSG(mActiveContext->activeRenderTarget, "VulkanRendererAPI: BeginRenderPass called with no render target");
+
+        VkCommandBuffer cmd = mActiveContext->CurrentFrame().GetCommandBuffer();
+        auto* sync = VulkanSystem::GetInstance()->GetSyncSubsystem().get();
+        auto& img = *mActiveContext->activeRenderTarget;
+
+        sync->Transition(cmd, img, {
+            .stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+            .accessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+            .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            });
+
+        const VkRenderingAttachmentInfo colorAttachment{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+            .imageView = img.GetVkImageView(),
+            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        };
+        const VkRenderingInfo renderingInfo{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+            .renderArea = { {0, 0}, { img.GetWidth(), img.GetHeight() } },
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &colorAttachment,
+        };
+        vkCmdBeginRendering(cmd, &renderingInfo);
+    }
+
+    void VulkanRendererAPI::EndRenderPass()
+    {
+        ENGINE_ASSERT_MSG(mActiveContext, "VulkanRendererAPI: EndRenderPass called outside BeginWindow/EndWindow");
+        vkCmdEndRendering(mActiveContext->CurrentFrame().GetCommandBuffer());
+    }
+
     void VulkanRendererAPI::SetRenderTarget(Ref<Image> target)
     {
         ENGINE_ASSERT_MSG(mActiveContext, "VulkanRendererAPI: SetRenderTarget called outside BeginWindow/EndWindow");
@@ -176,42 +216,41 @@ namespace Engine {
         vkCmdClearColorImage(cmd, img.GetVkImage(), VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &range);
     }
 
-    void VulkanRendererAPI::BeginRenderPass()
+    Ref<Pipeline> VulkanRendererAPI::CreateGraphicsPipeline(const GraphicsPipelineSettings& settings)
     {
-        ENGINE_ASSERT_MSG(mActiveContext, "VulkanRendererAPI: BeginRenderPass called outside BeginWindow/EndWindow");
-        ENGINE_ASSERT_MSG(mActiveContext->activeRenderTarget, "VulkanRendererAPI: BeginRenderPass called with no render target");
-
-        VkCommandBuffer cmd = mActiveContext->CurrentFrame().GetCommandBuffer();
-        auto* sync  = VulkanSystem::GetInstance()->GetSyncSubsystem().get();
-        auto& img   = *mActiveContext->activeRenderTarget;
-
-        sync->Transition(cmd, img, {
-            .stageMask  = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .accessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-            .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            });
-
-        const VkRenderingAttachmentInfo colorAttachment{
-            .sType          = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-            .imageView      = img.GetVkImageView(),
-            .imageLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
-            .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
-        };
-        const VkRenderingInfo renderingInfo{
-            .sType                  = VK_STRUCTURE_TYPE_RENDERING_INFO,
-            .renderArea             = { {0, 0}, { img.GetWidth(), img.GetHeight() } },
-            .layerCount             = 1,
-            .colorAttachmentCount   = 1,
-            .pColorAttachments      = &colorAttachment,
-        };
-        vkCmdBeginRendering(cmd, &renderingInfo);
+        return std::make_shared<VulkanGraphicsPipeline>(settings);
     }
 
-    void VulkanRendererAPI::EndRenderPass()
+    Ref<Pipeline> VulkanRendererAPI::CreateComputePipeline(const ComputePipelineSettings& settings)
     {
-        ENGINE_ASSERT_MSG(mActiveContext, "VulkanRendererAPI: EndRenderPass called outside BeginWindow/EndWindow");
-        vkCmdEndRendering(mActiveContext->CurrentFrame().GetCommandBuffer());
+        return std::make_shared<VulkanComputePipeline>(settings);
+    }
+
+    void VulkanRendererAPI::BindPipeline(Ref<Pipeline> pipeline)
+    {
+        ENGINE_ASSERT_MSG(mActiveContext, "BindPipeline: called outside BeginWindow");
+        ENGINE_ASSERT_MSG(pipeline && pipeline->IsValid(), "BindPipeline: invalid pipeline");
+
+        mBoundPipeline = pipeline;
+        VkCommandBuffer cmd = mActiveContext->CurrentFrame().GetCommandBuffer();
+
+        if (pipeline->GetType() == PipelineType::Graphics) {
+            auto* vkp = static_cast<VulkanGraphicsPipeline*>(pipeline.get());
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, vkp->GetVkPipeline());
+        }
+        else if (pipeline->GetType() == PipelineType::Compute) {
+            auto* vkp = static_cast<VulkanComputePipeline*>(pipeline.get());
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, vkp->GetVkPipeline());
+        }
+    }
+
+    void VulkanRendererAPI::Dispatch(uint32_t x, uint32_t y, uint32_t z)
+    {
+        ENGINE_ASSERT_MSG(mActiveContext, "Dispatch: called outside BeginWindow");
+        ENGINE_ASSERT_MSG(mBoundPipeline && mBoundPipeline->GetType() == PipelineType::Compute,
+            "Dispatch: no compute pipeline bound");
+
+        vkCmdDispatch(mActiveContext->CurrentFrame().GetCommandBuffer(), x, y, z);
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────────

@@ -28,4 +28,6 @@ private:
     };
 
     std::vector<WindowData> mWindows;
+    Engine::Ref<Engine::Pipeline> mComputePipeline;
+    Engine::Ref<Engine::Pipeline> mGraphicsPipeline;
 };

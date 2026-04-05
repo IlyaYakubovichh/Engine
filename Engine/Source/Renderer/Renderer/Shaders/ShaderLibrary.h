@@ -43,7 +43,7 @@ namespace Engine {
 
     private:
         ShaderLibrary() = default;
-        ~ShaderLibrary() override = default;
+        ~ShaderLibrary() override;
 
         std::unordered_map<std::string, Ref<Shader>> mShaders;
     };
